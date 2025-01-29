@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "929912810991",
+    "project_id": "personal-expense-982c4",
+    "storage_bucket": "personal-expense-982c4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929912810991:android:e50d9afc1b58e9ff8eda1a",
+        "android_client_info": {
+          "package_name": "com.example.expense_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVUrzgKO_roerd2ip_4LcqLq8qOS_6ABk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:929912810991:android:c17e6c4289c1e1798eda1a",
+        "android_client_info": {
+          "package_name": "gnhub.expense.tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVUrzgKO_roerd2ip_4LcqLq8qOS_6ABk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
