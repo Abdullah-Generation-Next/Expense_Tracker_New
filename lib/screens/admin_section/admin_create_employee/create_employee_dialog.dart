@@ -514,7 +514,7 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
 
   DeleteController controller = Get.put(DeleteController());
 
-  Future<void> _showDeleteConfirmationDialog(BuildContext context, DocumentSnapshot userDoc) async {
+  Future<void> _showDeleteConfirmationDialog(BuildContext context, DocumentSnapshot userDoc, String username) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // User must tap a button to dismiss the dialog.
@@ -524,7 +524,7 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Are you sure you want to delete this employee?'),
+                Text('Are you sure you want to delete this employee "${username}" ?'),
               ],
             ),
           ),
@@ -706,7 +706,10 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
                                 IconButton(
                                   icon: Icon(Icons.delete, color: Colors.grey),
                                   onPressed: () {
-                                    _showDeleteConfirmationDialog(context, userDoc);
+                                    String username = userDoc.data().toString().contains('username')
+                                        ? userDoc['username']
+                                        : 'Employee name not found';
+                                    _showDeleteConfirmationDialog(context, userDoc, username);
                                   },
                                 ),
                               ],

@@ -87,7 +87,8 @@ class _RootAppState extends State<RootApp> {
                 height: 60, // Set the height
                 child: Center(
                   child: Obx(
-                    () => Text('${loadController.siteLable.value != '' ? loadController.siteLable.value : "General" /*.split(" ")[0]*/} Login'),
+                    () => Text(
+                        '${loadController.siteLable.value != '' ? loadController.siteLable.value : "General" /*.split(" ")[0]*/} Login'),
                   ),
                 ),
               ),

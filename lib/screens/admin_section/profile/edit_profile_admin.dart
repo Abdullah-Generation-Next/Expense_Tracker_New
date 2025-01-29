@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:etmm/const/const.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../getx_controller/load_excel_controller.dart';
 
 class AdminEditProfilePage extends StatefulWidget {
@@ -40,6 +42,7 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage> {
   @override
   void initState() {
     super.initState();
+    controller.image.value = null;
     _loadProfileData();
   }
 
@@ -213,6 +216,47 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage> {
     );
   }
 
+  Future<void> showIDUploadImageSourceDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Text(
+            'Select Image Source',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                minLeadingWidth: -5,
+                leading: Icon(CupertinoIcons.photo_fill, color: themecolor),
+                title: Text(
+                  'Select from Gallery',
+                  style: TextStyle(color: Colors.black),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  controller.getImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                minLeadingWidth: -5,
+                leading: Icon(CupertinoIcons.camera_fill, color: themecolor),
+                title: Text('Take a Photo', style: TextStyle(color: Colors.black)),
+                onTap: () {
+                  Navigator.pop(context);
+                  controller.getImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -255,113 +299,116 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage> {
                                 shape: CircleBorder(side: BorderSide(width: 3, color: Colors.grey)),
                                 clipBehavior: Clip.antiAlias,
                                 color: Colors.transparent,
-                                child: Obx(() => controller.image.value != null
-                                    ? Ink.image(
-                                  image: FileImage(File(controller.image.value!.path).absolute),
-                                  fit: BoxFit.contain,
-                                  width: 220,
-                                  height: 220,
-                                  child: InkWell(
-                                    radius: 0,
-                                    onTap: () async {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (_) => Center(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 50, right: 50),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                    image: FileImage(File(controller.image.value!.path).absolute),
-                                                    fit: BoxFit.cover),
-                                              ),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                                    : (controller.finalImageUrl.value != "")
-                                    ? Ink.image(
-                                  image: NetworkImage(controller.finalImageUrl.value),
-                                  fit: BoxFit.contain,
-                                  width: 150,
-                                  height: 150,
-                                  child: InkWell(
-                                    radius: 0,
-                                    onTap: () async {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (_) => Center(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 50, right: 50),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                image: DecorationImage(
-                                                    image: NetworkImage(controller.finalImageUrl.value),
-                                                    fit: BoxFit.cover),
-                                              ),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                                    : GestureDetector(
-                                  onTap: () async {
-                                    await showDialog(
-                                      context: context,
-                                      builder: (_) => Center(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(left: 50, right: 50),
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              Navigator.pop(context);
+                                child: Obx(
+                                  () => controller.image.value != null
+                                      ? Ink.image(
+                                          image: FileImage(File(controller.image.value!.path).absolute),
+                                          fit: BoxFit.contain,
+                                          width: 220,
+                                          height: 220,
+                                          child: InkWell(
+                                            radius: 0,
+                                            onTap: () async {
+                                              await showDialog(
+                                                context: context,
+                                                builder: (_) => Center(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 50, right: 50),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        image: DecorationImage(
+                                                            image:
+                                                                FileImage(File(controller.image.value!.path).absolute),
+                                                            fit: BoxFit.cover),
+                                                      ),
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          Navigator.pop(context);
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
                                             },
-                                            child: Container(
-                                              width: double.infinity,
-                                              height: 250,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.blueGrey,
-                                                // image: DecorationImage(
-                                                //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                          ),
+                                        )
+                                      : (controller.finalImageUrl.value != "")
+                                          ? Ink.image(
+                                              image: NetworkImage(controller.finalImageUrl.value),
+                                              fit: BoxFit.contain,
+                                              width: 150,
+                                              height: 150,
+                                              child: InkWell(
+                                                radius: 0,
+                                                onTap: () async {
+                                                  await showDialog(
+                                                    context: context,
+                                                    builder: (_) => Center(
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(left: 50, right: 50),
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            shape: BoxShape.circle,
+                                                            image: DecorationImage(
+                                                                image: NetworkImage(controller.finalImageUrl.value),
+                                                                fit: BoxFit.cover),
+                                                          ),
+                                                          child: GestureDetector(
+                                                            onTap: () {
+                                                              Navigator.pop(context);
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
                                               ),
-                                              child: Icon(
-                                                Icons.person,
-                                                size: 175,
-                                                color: Colors.white,
+                                            )
+                                          : GestureDetector(
+                                              onTap: () async {
+                                                await showDialog(
+                                                  context: context,
+                                                  builder: (_) => Center(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(left: 50, right: 50),
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          Navigator.pop(context);
+                                                        },
+                                                        child: Container(
+                                                          width: double.infinity,
+                                                          height: 250,
+                                                          decoration: BoxDecoration(
+                                                            shape: BoxShape.circle,
+                                                            color: Colors.blueGrey,
+                                                            // image: DecorationImage(
+                                                            //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                                          ),
+                                                          child: Icon(
+                                                            Icons.person,
+                                                            size: 175,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: CircleAvatar(
+                                                radius: 30,
+                                                backgroundColor: Colors.blueGrey,
+                                                child: Icon(
+                                                  Icons.person,
+                                                  color: Colors.white,
+                                                  size: 75,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: CircleAvatar(
-                                    radius: 30,
-                                    backgroundColor: Colors.blueGrey,
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 75,
-                                    ),
-                                  ),
-                                ),),
+                                ),
                               ),
                             ),
                             Positioned(
@@ -372,7 +419,7 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage> {
                                 message: 'Upload Company Logo/Image',
                                 child: RawMaterialButton(
                                   onPressed: () {
-                                    controller.getImage();
+                                    showIDUploadImageSourceDialog(context);
                                   },
                                   elevation: 2,
                                   fillColor: Colors.white,
@@ -511,62 +558,66 @@ class _AdminEditProfilePageState extends State<AdminEditProfilePage> {
                         ),
                       ),
                     ),
-                    Obx(() => controller.finalImageUrl.value != '' ?
-                    Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          height: 60,
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: const ButtonStyle(
-                              // ignore: deprecated_member_use
-                              backgroundColor: MaterialStatePropertyAll(Color(0xff0558b4)),
-                              // ignore: deprecated_member_use
-                              padding: MaterialStatePropertyAll(EdgeInsets.all(0)),
-                            ),
-                            onPressed: _isLoading1 ? null : () {
-                              // controller.finalImageUrl.value = '';
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('Remove Company Logo'),
-                                  content: Text('Are you sure you want to remove the company logo?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text('Cancel'),
+                    Obx(
+                      () => controller.finalImageUrl.value != ''
+                          ? Column(
+                              children: [
+                                const SizedBox(height: 20),
+                                SizedBox(
+                                  height: 60,
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    style: const ButtonStyle(
+                                      // ignore: deprecated_member_use
+                                      backgroundColor: MaterialStatePropertyAll(Color(0xff0558b4)),
+                                      // ignore: deprecated_member_use
+                                      padding: MaterialStatePropertyAll(EdgeInsets.all(0)),
                                     ),
-                                    TextButton(
-                                      onPressed: () async {
-                                        await removeCompanyLogo(widget.adminId);
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text('Remove'),
+                                    onPressed: _isLoading1
+                                        ? null
+                                        : () {
+                                            // controller.finalImageUrl.value = '';
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: Text('Remove Company Logo'),
+                                                content: Text('Are you sure you want to remove the company logo?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(context),
+                                                    child: Text('Cancel'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      await removeCompanyLogo(widget.adminId);
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: Text('Remove'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                    child: Center(
+                                      child: _isLoading1
+                                          ? const CircularProgressIndicator(
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            )
+                                          : const Text(
+                                              'Remove Profile Photo',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
+                                            ),
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              );
-                            },
-                            child: Center(
-                              child: _isLoading1
-                                  ? const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              )
-                                  : const Text(
-                                'Remove Profile Photo',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                        : SizedBox.shrink(),),
+                              ],
+                            )
+                          : SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),

@@ -57,7 +57,22 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     //       : false;
     // });
     updatedUserDoc = widget.userDoc;
+    // controller.finalImageUrl.value = widget.userDoc['company_logo'];
+    loadAdminCompanyLogo(widget.adminId);
     super.initState();
+  }
+
+  Future<void> loadAdminCompanyLogo(String adminId) async {
+    try {
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance.collection('Admin').doc(adminId).get();
+
+      if (adminDoc.exists && adminDoc.data() != null) {
+        String logoUrl = adminDoc['company_logo'] ?? '';
+        controller.finalImageUrl.value = logoUrl.isNotEmpty ? logoUrl : '';
+      }
+    } catch (e) {
+      print("Error fetching admin company logo: $e");
+    }
   }
 
   void _refreshProfileData() async {
@@ -292,118 +307,119 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                       ),
                                     ),
                               */
-                              Obx(() => (controller.finalImageUrl.value != "")
-                                  ?
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundColor: Colors.transparent,
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    await showDialog(
-                                      context: context,
-                                      builder: (_) => Center(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(left: 50, right: 50),
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: Container(
-                                              width: double.infinity,
-                                              height: 250,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.transparent,
-                                                image: DecorationImage(
-                                                  image: NetworkImage(controller.finalImageUrl.value),
-                                                  fit: BoxFit.fill,
+                              Obx(
+                                () => (controller.finalImageUrl.value != "")
+                                    ? CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Colors.transparent,
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            await showDialog(
+                                              context: context,
+                                              builder: (_) => Center(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(left: 50, right: 50),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: Container(
+                                                      width: double.infinity,
+                                                      height: 250,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color: Colors.transparent,
+                                                        image: DecorationImage(
+                                                          image: NetworkImage(controller.finalImageUrl.value),
+                                                          fit: BoxFit.fill,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: controller.finalImageUrl.value != ""
+                                              ? Container(
+                                                  width: 100,
+                                                  height: 100,
+                                                  child: ClipOval(
+                                                    clipBehavior: Clip.hardEdge,
+                                                    child: Image.network(
+                                                      controller.finalImageUrl.value,
+                                                      fit: BoxFit.cover,
+                                                      loadingBuilder: (BuildContext context, Widget child,
+                                                          ImageChunkEvent? loadingProgress) {
+                                                        if (loadingProgress == null) {
+                                                          // If the image has been loaded, show the image
+                                                          return child;
+                                                        } else {
+                                                          // While loading, show the CircularProgressIndicator
+                                                          return Center(
+                                                            child: CircularProgressIndicator(
+                                                              value: loadingProgress.expectedTotalBytes != null
+                                                                  ? loadingProgress.cumulativeBytesLoaded /
+                                                                      (loadingProgress.expectedTotalBytes ?? 1)
+                                                                  : null,
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  Icons.person,
+                                                  color: Colors.white,
+                                                  size: 30,
+                                                ),
+                                        ),
+                                      )
+                                    : GestureDetector(
+                                        onTap: () async {
+                                          await showDialog(
+                                            context: context,
+                                            builder: (_) => Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(left: 50, right: 50),
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Container(
+                                                    width: double.infinity,
+                                                    height: 250,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: Colors.blueGrey,
+                                                      // image: DecorationImage(
+                                                      //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.person,
+                                                      size: 175,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: controller.finalImageUrl.value != ""
-                                      ? Container(
-                                    width: 100,
-                                    height: 100,
-                                    child: ClipOval(
-                                      clipBehavior: Clip.hardEdge,
-                                      child: Image.network(
-                                        controller.finalImageUrl.value,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder: (BuildContext context, Widget child,
-                                            ImageChunkEvent? loadingProgress) {
-                                          if (loadingProgress == null) {
-                                            // If the image has been loaded, show the image
-                                            return child;
-                                          } else {
-                                            // While loading, show the CircularProgressIndicator
-                                            return Center(
-                                              child: CircularProgressIndicator(
-                                                value: loadingProgress.expectedTotalBytes != null
-                                                    ? loadingProgress.cumulativeBytesLoaded /
-                                                    (loadingProgress.expectedTotalBytes ?? 1)
-                                                    : null,
-                                              ),
-                                            );
-                                          }
+                                          );
                                         },
-                                      ),
-                                    ),
-                                  )
-                                      : Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ),
-                              )
-                                  : GestureDetector(
-                                onTap: () async {
-                                  await showDialog(
-                                    context: context,
-                                    builder: (_) => Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(left: 50, right: 50),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Container(
-                                            width: double.infinity,
-                                            height: 250,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.blueGrey,
-                                              // image: DecorationImage(
-                                              //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
-                                            ),
-                                            child: Icon(
-                                              Icons.person,
-                                              size: 175,
-                                              color: Colors.white,
-                                            ),
+                                        child: CircleAvatar(
+                                          radius: 30,
+                                          // backgroundImage: NetworkImage(
+                                          //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
+                                          backgroundColor: Colors.blueGrey,
+                                          child: Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            size: 30,
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
-                                child: CircleAvatar(
-                                  radius: 30,
-                                  // backgroundImage: NetworkImage(
-                                  //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
-                                  backgroundColor: Colors.blueGrey,
-                                  child: Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ),
-                              ),),
+                              ),
                               SizedBox(
                                 width: 15,
                               ),
@@ -654,7 +670,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                     );
                                   } else {
                                     // When the switch is turned ON (Enable PIN)
-                                    bool isSwitchOn = await loadController.getAdminSavedPinFromFirestore(widget.adminId);
+                                    bool isSwitchOn =
+                                        await loadController.getAdminSavedPinFromFirestore(widget.adminId);
                                     if (isSwitchOn) {
                                       // If already enabled in Firestore
                                       // setState(() {
@@ -1207,21 +1224,21 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             onTap: () async {
                               String storeLink = 'https://play.google.com/store/apps/details?id=gnhub.expense.tracker';
 
-                              try {
-                                DocumentSnapshot docSnapshot =
-                                    await FirebaseFirestore.instance.collection('Admin').doc(widget.adminId).get();
-                                if (docSnapshot.exists) {
-                                  String referralCode = docSnapshot.get('referralCode');
-                                  String shareableLink = '$storeLink&referral=$referralCode';
-                                  await Share.share(shareableLink);
-                                } else {
-                                  throw Exception("Admin details not found");
-                                }
-                              } catch (e) {
-                                print("Error sharing link: $e");
-                              }
+                              // try {
+                              //   DocumentSnapshot docSnapshot =
+                              //       await FirebaseFirestore.instance.collection('Admin').doc(widget.adminId).get();
+                              //   if (docSnapshot.exists) {
+                              //     String referralCode = docSnapshot.get('referralCode');
+                              //     String shareableLink = '$storeLink&referral=$referralCode';
+                              //     await Share.share(shareableLink);
+                              //   } else {
+                              //     throw Exception("Admin details not found");
+                              //   }
+                              // } catch (e) {
+                              //   print("Error sharing link: $e");
+                              // }
 
-                              // await Share.share(storeLink);
+                              await Share.share(storeLink);
                             },
                           ),
                         ),
@@ -1267,7 +1284,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                       ),
                                       TextButton(
                                         style: const ButtonStyle(
-                                          // ignore: deprecated_member_use
+                                            // ignore: deprecated_member_use
                                             backgroundColor: MaterialStatePropertyAll(Colors.transparent)),
                                         onPressed: () async {
                                           try {
@@ -1298,6 +1315,159 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             },
                           ),
                         ),
+                        Card(
+                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          color: Colors.white,
+                          child: ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            tileColor: Colors.white,
+                            leading: Icon(
+                              Icons.account_circle_outlined,
+                              // ignore: deprecated_member_use
+                              color: Colors.red,
+                            ),
+                            title: const Text('Delete Account',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 16,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.bold,
+                                )),
+                            subtitle: Text("Delete this account permanently."),
+                            trailing: Obx(() => (loadController.deleteLoader.isTrue)
+                                ? SizedBox(
+                                    width: 24, // Fixed width for proper alignment
+                                    height: 24, // Fixed height for proper alignment
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5, // Reduce thickness for better UI
+                                      valueColor: AlwaysStoppedAnimation<Color>(themecolor),
+                                    ),
+                                  )
+                                : SizedBox.shrink()),
+                            onTap: () {
+                              // Navigator.of(context).pop();
+                              /*showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Logout Confirmation'),
+                                    content: const Text('Do you want to logout?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          // Close the dialog
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('No'),
+                                      ),
+                                      TextButton(
+                                        style: const ButtonStyle(
+                                          // ignore: deprecated_member_use
+                                            backgroundColor: MaterialStatePropertyAll(Colors.transparent)),
+                                        onPressed: () async {
+                                          try {
+                                            // Sign out the user
+                                            SharedPref.deleteAll();
+                                            await FirebaseAuth.instance.signOut();
+                                            // Navigate to the login page
+                                            // ignore: use_build_context_synchronously
+                                            Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => RootApp()),
+                                                  (Route<dynamic> route) => false, // Prevent going back to this screen
+                                            );
+
+                                            // SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                                          } catch (e) {
+                                            if (kDebugMode) {
+                                              print('Error signing out: $e');
+                                            }
+                                          }
+                                        },
+                                        child: const Text('Yes'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );*/
+                              showDeleteAdminDialog(
+                                  context, widget.adminId, SharedPref.get(prefKey: PrefKey.adminEmail) ?? "");
+                            },
+                          ),
+                        ),
+                        /*Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text("Backup Cash Book !!!"),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          '''
+                                            Follow the steps
+                                            
+                                            Cashbook Local Backup
+                                            1. Click on 'Backup' Button.
+                                            2. Select/Create the specific folder on local storage to backup. (older one is 'cashbook_backup' or create a new one)
+                                            3. Keep the file name 'Clients.csv' and 'Transactions.csv' in the same folder.
+                                            4. That's it. Backup Done. 
+                                            ''',
+                                          style:
+                                              TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w400),
+                                        ),
+                                      ],
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text("Cancel"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          // EasyLoading.show(status: "Loading.");
+                                          // AppDatabaseHelper().exportClientsToCsv();
+                                          // EasyLoading.dismiss();
+                                        },
+                                        child: const Text("Backup"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  color: Color(0xaaffffcd),
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(color: Color(0xffffecb5), width: 1)),
+                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              child: RichText(
+                                  text: TextSpan(
+                                      text: "Note: ",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500, color: Color(0xff664d03), fontSize: 12),
+                                      children: [
+                                    TextSpan(
+                                        text:
+                                            "Kindly create a daily data backup routine to ensure the safety and integrity of your accounts.",
+                                        style: TextStyle(fontWeight: FontWeight.w400, color: Color(0xff664d03))),
+                                    TextSpan(text: " Backup Now »"),
+                                  ])),
+                            ),
+                          ),
+                        ),*/
                         SizedBox(
                           height: 50,
                         ),
@@ -1305,13 +1475,15 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     ),
                   ],
                 ),
-                Obx(() => loadController.loadAdminSwitch.isTrue
-                    ? Container(
-                        height: MediaQuery.of(context).size.height,
-                        alignment: Alignment.center,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(themecolor),
+                Obx(() => (loadController.loadAdminSwitch.isTrue)
+                    ? Center(
+                        child: Container(
+                          height: MediaQuery.of(context).size.height,
+                          alignment: Alignment.center,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(themecolor),
+                            ),
                           ),
                         ),
                       )
@@ -1323,4 +1495,166 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       ),
     );
   }
+
+  void showDeleteAdminDialog(BuildContext context, String adminId, String adminEmail) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('⚠️ Confirm Deletion'),
+          content: Text(
+            "Warning! Deleting this admin will remove all expense data and all employees associated with this admin. "
+            "This action is irreversible. Are you absolutely sure you want to proceed?",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: Colors.black)),
+            ),
+            TextButton(
+              onPressed: () {
+                // Show second confirmation
+                Navigator.pop(context);
+                showSecondConfirmation(context, adminId, adminEmail);
+              },
+              child: Text('Proceed', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showSecondConfirmation(BuildContext context, String adminId, String adminEmail) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('🚨 Final Confirmation'),
+          content: Text(
+            "This is your last chance! Deleting this admin will PERMANENTLY erase all associated expenses, users, and data. "
+            "This action cannot be undone.\n\nAre you sure you want to continue?",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('No, Keep Admin', style: TextStyle(color: Colors.green)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                deleteAdmin(adminId, adminEmail); // Call delete function
+              },
+              child: Text('Yes, Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> deleteAdmin(String adminId, String adminEmail) async {
+    loadController.deleteLoader.value = true;
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      FirebaseAuth auth = FirebaseAuth.instance;
+      User? user = auth.currentUser;
+      print(user);
+      // Step 1: Delete all Users under this Admin
+      QuerySnapshot userSnapshot = await firestore.collection('Users').where('adminId', isEqualTo: adminId).get();
+      for (var doc in userSnapshot.docs) {
+        await firestore.collection('Users').doc(doc.id).delete();
+      }
+      print("✅ All users linked to this admin deleted.");
+
+      // Step 2: Delete the Admin from Firestore
+      await firestore.collection('Admin').doc(adminId).delete();
+      print("✅ Admin deleted from Firestore.");
+
+      // Step 3: Check if admin exists in Firebase Authentication
+      deleteAdminAccount();
+      /*user?.delete();
+
+      // Step 4: Clear SharedPreferences and Navigate
+      SharedPref.deleteAll();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => RootApp()),
+            (Route<dynamic> route) => false, // Prevent going back
+      );
+
+      print("🔥 Admin and all related data deleted successfully.");
+      Fluttertoast.showToast(msg: "🔥 Admin and all related data deleted successfully.");*/
+    } catch (e) {
+      print("❌ Error deleting admin: $e");
+    } finally {
+      loadController.deleteLoader.value = false;
+    }
+  }
+
+  Future<void> deleteAdminAccount() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        await user.delete();
+        // Fluttertoast.showToast(msg: "Account deleted successfully!");
+        // Step 4: Clear SharedPreferences and Navigate
+        SharedPref.deleteAll();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => RootApp()),
+          (Route<dynamic> route) => false, // Prevent going back
+        );
+        print("🔥 Admin and all related data deleted successfully.");
+        Fluttertoast.showToast(msg: "🔥 Admin and all related data deleted successfully.");
+      } else {
+        Fluttertoast.showToast(msg: "Error: User not found!");
+        return; // Stop execution if the user is null
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: "Failed to delete account: $e");
+      return; // Stop execution if deletion fails
+    }
+  }
+
+  /*Future<void> deleteAdmin(String adminId, String adminEmail) async {
+    loadController.deleteLoader.value = true;
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      FirebaseAuth auth = FirebaseAuth.instance;
+      User? user = auth.currentUser;
+      print(user);
+      // Step 1: Delete all Users under this Admin
+      QuerySnapshot userSnapshot = await firestore.collection('Users').where('adminId', isEqualTo: adminId).get();
+      for (var doc in userSnapshot.docs) {
+        await firestore.collection('Users').doc(doc.id).delete();
+      }
+      print("✅ All users linked to this admin deleted.");
+
+      // Step 2: Delete the Admin from Firestore
+      await firestore.collection('Admin').doc(adminId).delete();
+      print("✅ Admin deleted from Firestore.");
+
+      // Step 3: Check if admin exists in Firebase Authentication
+      user?.delete();
+
+      // Step 4: Clear SharedPreferences and Navigate
+      SharedPref.deleteAll();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => RootApp()),
+            (Route<dynamic> route) => false, // Prevent going back
+      );
+
+      print("🔥 Admin and all related data deleted successfully.");
+      Fluttertoast.showToast(msg: "🔥 Admin and all related data deleted successfully.");
+    } catch (e) {
+      print("❌ Error deleting admin: $e");
+    } finally {
+      loadController.deleteLoader.value = false;
+    }
+  }*/
 }

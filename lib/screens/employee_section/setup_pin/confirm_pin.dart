@@ -315,7 +315,7 @@ class _EmployeeConfirmPinState extends State<EmployeeConfirmPin> {
                 isProcessing = true;
               });
               // Save PIN to Firestore
-             /* FirebaseFirestore.instance.collection('Users').doc(widget.userId).update({'pin': code}).then((_) {
+              /* FirebaseFirestore.instance.collection('Users').doc(widget.userId).update({'pin': code}).then((_) {
                 // Save the switch state as well
                 FirebaseFirestore.instance
                     .collection('Users')

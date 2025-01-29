@@ -91,10 +91,6 @@ class _SplashScreenState extends State<SplashScreen> {
           );
         }
       });
-
-
-
-
     } else {
       Navigator.pushReplacement(
           context,
@@ -116,7 +112,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (querySnapshot.docs.isNotEmpty) {
       DocumentSnapshot userDoc = querySnapshot.docs.first;
-
 
       await constants.loadAdminFromFirestore(userDoc['adminId']).then((value) {
         print("SiteLable: ${loadController.siteLable.value}");
@@ -156,9 +151,6 @@ class _SplashScreenState extends State<SplashScreen> {
           // );
         }
       });
-
-
-
     } else {
       Navigator.pushReplacement(
         context,

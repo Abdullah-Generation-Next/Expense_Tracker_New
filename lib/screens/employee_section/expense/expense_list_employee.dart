@@ -1368,8 +1368,16 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                             widget.fromAdmin == false
                                 ? Container(
                                     decoration: BoxDecoration(
-                                      color: expenseStatus == 'Approved' ? Color(0xFFDBE6CF) : Color(0xFFF7D3C6),
+                                      color: expenseStatus == 'Approved'
+                                          ? Color(0xFFDBE6CF)
+                                          : expenseStatus == 'Rejected'
+                                              ? Color(0xFFF7D3C6)
+                                              : Color(0xaaffffcd),
+                                      // color: expenseStatus == 'Approved' ? Color(0xFFDBE6CF) : Color(0xFFF7D3C6),
                                       borderRadius: BorderRadius.all(Radius.circular(5)),
+                                      border: Border.all(
+                                          color: expenseStatus == 'Pending' ? Color(0xffffecb5) : Colors.transparent,
+                                          width: 1),
                                     ),
                                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     child: FittedBox(
@@ -1384,7 +1392,7 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                                               ? Color(0xFF6F9C40)
                                               : expenseStatus == 'Rejected'
                                                   ? Color(0xFFAE2F09)
-                                                  : null,
+                                                  : Color(0xff664d03),
                                         ),
                                       ),
                                     ),

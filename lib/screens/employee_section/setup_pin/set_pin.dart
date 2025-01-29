@@ -56,7 +56,7 @@ class _EmployeeSetPinState extends State<EmployeeSetPin> {
     });
   }*/
 
- /* void turnOffPin(BuildContext context) async {
+  /* void turnOffPin(BuildContext context) async {
     setState(() {
       isProcessing = true;
     });

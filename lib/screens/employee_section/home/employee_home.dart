@@ -165,15 +165,19 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
           backgroundColor: Colors.grey[100],
           appBar: AppBar(
             backgroundColor: themecolor,
-            leading: widget.fromAdmin == true ? null : Obx(() => Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: CircleAvatar(
-                radius: 15,
-                backgroundColor: Colors.transparent,
-                foregroundImage: NetworkImage(controller.companyLogo.value),
-                child: GestureDetector(
-                  onTap: () async {
-                    await showDialog(
+            leading: widget.fromAdmin == true
+                ? null
+                : Obx(
+                    () => (controller.companyLogo.value != "")
+                        ? Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: CircleAvatar(
+                              radius: 15,
+                              backgroundColor: Colors.transparent,
+                              foregroundImage: NetworkImage(controller.companyLogo.value),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  /*await showDialog(
                       context: context,
                       builder: (_) => Center(
                         child: Padding(
@@ -197,11 +201,110 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),),
+                    );*/
+                                  double screenHeight = MediaQuery.of(context).size.height;
+                                  double targetHeight = screenHeight * 0.75;
+                                  await showDialog(
+                                    context: context,
+                                    builder: (_) => Center(
+                                      child: Container(
+                                        height: targetHeight,
+                                        width: double.infinity,
+                                        margin: EdgeInsets.symmetric(horizontal: 25),
+                                        // color: Color(0xffeeeeee),
+                                        color: Colors.transparent,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: PhotoViewGallery.builder(
+                                              itemCount: 1,
+                                              builder: (context, index) {
+                                                return PhotoViewGalleryPageOptions(
+                                                  imageProvider: NetworkImage(controller.companyLogo.value),
+                                                  minScale: PhotoViewComputedScale.contained * 1,
+                                                  maxScale: PhotoViewComputedScale.covered * 2,
+                                                );
+                                              },
+                                              scrollPhysics: BouncingScrollPhysics(),
+                                              backgroundDecoration: BoxDecoration(
+                                                color: Colors.transparent,
+                                              ),
+                                              pageController: PageController(),
+                                              loadingBuilder: (context, progress) {
+                                                if (progress == null) {
+                                                  return SizedBox.shrink();
+                                                } else {
+                                                  return Center(
+                                                    child: CircularProgressIndicator(
+                                                      value: progress.expectedTotalBytes != null
+                                                          ? progress.cumulativeBytesLoaded /
+                                                              (progress.expectedTotalBytes ?? 1)
+                                                          : null,
+                                                      color: Colors.white, // Set the color to white
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: GestureDetector(
+                              onTap: () async {
+                                await showDialog(
+                                  context: context,
+                                  builder: (_) => Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 50, right: 50),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Container(
+                                          width: double.infinity,
+                                          height: 250,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.blueGrey,
+                                            // image: DecorationImage(
+                                            //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                          ),
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 175,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: CircleAvatar(
+                                radius: 15,
+                                // backgroundImage: NetworkImage(
+                                //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
+                                backgroundColor: Colors.blueGrey,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
             title: Text(
               'Dashboard ${selectedMonthText.isNotEmpty && selectedMonthText != 'All' ? "- $selectedMonthText" : ""}',
               style: TextStyle(fontWeight: FontWeight.bold, color: kwhite),
@@ -978,6 +1081,46 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
           ])),
     );
   }
+
+  /*
+                Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: CircleAvatar(
+                radius: 15,
+                backgroundColor: Colors.transparent,
+                foregroundImage: NetworkImage(controller.companyLogo.value),
+                child: GestureDetector(
+                  onTap: () async {
+                    await showDialog(
+                      context: context,
+                      builder: (_) => Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 50, right: 50),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 250,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.transparent,
+                                image: DecorationImage(
+                                  image: NetworkImage(controller.companyLogo.value),
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            */
 
   // String _getUsername(String email) {
   //   // Split email address by '@' symbol and return the first part

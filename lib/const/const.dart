@@ -11,7 +11,6 @@ const kwhite = Colors.white;
 const kgrey = Color(0xFFF5F5F5);
 
 class Const {
-
   final List<String> paymentModeLists = ['Cash', 'Net Banking', 'UPI'];
 
   LoadAllFieldsController controller = Get.put(LoadAllFieldsController());
@@ -69,7 +68,6 @@ class Const {
         controller.isAutoApprove.value = adminData['is_auto_approve'] ?? "Yes";
         controller.siteLable.value = adminData['site_label'] ?? "General";
         controller.showDeleteButton.value = adminData['show_delete_button'] ?? "Yes";
-
       } else {
         await adminRef.set({
           'show_delete_button': "Yes",
@@ -146,15 +144,11 @@ class Const {
 
   Future<void> loadCategories(String adminId) async {
     try {
-      final categorySnapshot = await FirebaseFirestore.instance
-          .collection('Admin')
-          .doc(adminId)
-          .collection('categories')
-          .get();
+      final categorySnapshot =
+          await FirebaseFirestore.instance.collection('Admin').doc(adminId).collection('categories').get();
 
       if (categorySnapshot.docs.isNotEmpty) {
-        List<String> categories =
-        categorySnapshot.docs.map((doc) => doc['name'] as String).toList();
+        List<String> categories = categorySnapshot.docs.map((doc) => doc['name'] as String).toList();
         controller.categoryLists.value = categories;
       } else {
         await addDefaultCategories(adminId);
@@ -206,10 +200,7 @@ class Const {
 
   Future<void> loadAdminFields(String adminId) async {
     try {
-      final adminDoc = await FirebaseFirestore.instance
-          .collection('Admin')
-          .doc(adminId)
-          .get();
+      final adminDoc = await FirebaseFirestore.instance.collection('Admin').doc(adminId).get();
 
       if (adminDoc.exists) {
         final adminData = adminDoc.data() as Map<String, dynamic>;
@@ -225,7 +216,6 @@ class Const {
         controller.isAutoApprove.value = adminData['is_auto_approve'] ?? 'Yes';
         controller.siteLable.value = adminData['site_label'] ?? 'General';
         controller.showDeleteButton.value = adminData['show_delete_button'] ?? 'Yes';
-
       } else {
         print("Admin document does not exist");
       }
@@ -237,18 +227,22 @@ class Const {
   /*================================================================================
   ==================================================================================
   ================================================================================*/
-
 }
 
 /*
   Delete account wala for IOS
-  Splash timing
   categories replications --
+  image edit profile mein nahi dala fir bhi bohot load ley che image path update hone par hi lena chahiye --
+  camera and gallery nu dialog show --
+  Splash timing
   profile employee icons and logo show and search card design --
   set pin screen init load close
   all profile same setup as admin
-  image edit profile mein nahi dala fir bhi bohot load ley che image path update hone par hi lena chahiye --
-  camera and gallery nu dialog show --
+  pending background color
+
+  Location wala
+  Share Wala
+  open excel inside app
+  Home Page par category wise filterations
+  Notifications wala
 */
-
-

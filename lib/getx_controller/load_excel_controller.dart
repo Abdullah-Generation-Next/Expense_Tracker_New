@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -60,6 +59,7 @@ class LoadAllFieldsController extends GetxController {
 
   RxBool isAdminPinEnabled = false.obs;
   RxBool loadAdminSwitch = false.obs;
+  RxBool deleteLoader = false.obs;
 
   Future<bool> getAdminSavedPinFromFirestore(userId) async {
     loadAdminSwitch.value = true;
@@ -190,9 +190,26 @@ class AdminProfileController extends GetxController {
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> getImage() async {
+  // Future<void> getImage() async {
+  //   try {
+  //     final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+  //
+  //     if (pickedFile != null) {
+  //       image.value = File(pickedFile.path);
+  //       print('Image Selected: ${pickedFile.path}');
+  //     } else {
+  //       print('No Image Selected');
+  //       Fluttertoast.showToast(msg: 'No Image Selected');
+  //     }
+  //   } catch (e) {
+  //     print('Error picking image: $e');
+  //     Fluttertoast.showToast(msg: 'Error picking image $e');
+  //   }
+  // }
+
+  Future<void> getImage(ImageSource source) async {
     try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
 
       if (pickedFile != null) {
         image.value = File(pickedFile.path);
@@ -203,16 +220,15 @@ class AdminProfileController extends GetxController {
       }
     } catch (e) {
       print('Error picking image: $e');
-      Fluttertoast.showToast(msg: 'Error picking image $e');
+      Fluttertoast.showToast(msg: 'Error picking image: $e');
     }
   }
 
-  @override
-  void onInit() {
-    image.value = null;
-    super.onInit();
-  }
-
+  // @override
+  // void onInit() {
+  //   image.value = null;
+  //   super.onInit();
+  // }
 }
 
 class EmployeeProfileController extends GetxController {
@@ -221,9 +237,26 @@ class EmployeeProfileController extends GetxController {
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> getImage() async {
+  // Future<void> getImage() async {
+  //   try {
+  //     final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+  //
+  //     if (pickedFile != null) {
+  //       image.value = File(pickedFile.path);
+  //       print('Image Selected: ${pickedFile.path}');
+  //     } else {
+  //       print('No Image Selected');
+  //       Fluttertoast.showToast(msg: 'No Image Selected');
+  //     }
+  //   } catch (e) {
+  //     print('Error picking image: $e');
+  //     Fluttertoast.showToast(msg: 'Error picking image $e');
+  //   }
+  // }
+
+  Future<void> getImage(ImageSource source) async {
     try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
 
       if (pickedFile != null) {
         image.value = File(pickedFile.path);
@@ -234,14 +267,13 @@ class EmployeeProfileController extends GetxController {
       }
     } catch (e) {
       print('Error picking image: $e');
-      Fluttertoast.showToast(msg: 'Error picking image $e');
+      Fluttertoast.showToast(msg: 'Error picking image: $e');
     }
   }
 
-  @override
-  void onInit() {
-    image.value = null;
-    super.onInit();
-  }
-
+  // @override
+  // void onInit() {
+  //   image.value = null;
+  //   super.onInit();
+  // }
 }
