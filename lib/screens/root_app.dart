@@ -88,7 +88,7 @@ class _RootAppState extends State<RootApp> {
                 child: Center(
                   child: Obx(
                     () => Text(
-                        '${loadController.siteLable.value != '' ? loadController.siteLable.value : "General" /*.split(" ")[0]*/} Login'),
+                        '${loadController.siteLable.value != '' ? loadController.siteLable.value : "Employee" /*.split(" ")[0]*/} Login'),
                   ),
                 ),
               ),

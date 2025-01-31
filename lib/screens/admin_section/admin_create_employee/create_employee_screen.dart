@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-
 import '../../../const/const.dart';
 import '../../../getx_controller/load_excel_controller.dart';
+import 'dart:math';
 
 //ignore: must_be_immutable
 class AddEmployeeScreen extends StatefulWidget {
@@ -190,6 +190,46 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     }
   }
 
+  /*
+  Future<void> insertMultipleUsers(BuildContext context) async {
+    final firestore = FirebaseFirestore.instance.collection('Users');
+
+    List<Future<void>> batchInserts = [];
+    final random = Random();
+
+    for (int i = 0; i < 100; i++) {
+      String randomUsername = "Abdullah${random.nextInt(100000)}";
+      String randomMobile = "9${random.nextInt(1000000000).toString().padLeft(9, '0')}";
+      String randomEmail = "abdullah${random.nextInt(100000)}@gnhub.com";
+
+      final userData = {
+        'adminId': widget.adminId,
+        'username': randomUsername,
+        'mobile': randomMobile,
+        'email': randomEmail,
+        'password': "123456",
+        'isActive': true,
+        'pin': "",
+        'isSwitchOn': false,
+        'employee_logo': "",
+      };
+
+      batchInserts.add(firestore.add(userData));
+    }
+
+    try {
+      await Future.wait(batchInserts);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("10 Users inserted successfully!")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+  */
+
   @override
   void dispose() {
     usernameFocusNode.dispose();
@@ -236,7 +276,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               ? null
               : () {
                   // Navigator.of(context).pop();
-                  _submitForm(context, userDoc: widget.userDoc);
+                  _submitForm(
+                    context, /*userDoc: widget.userDoc*/
+                  );
                 },
           style: ButtonStyle(
               // ignore: deprecated_member_use

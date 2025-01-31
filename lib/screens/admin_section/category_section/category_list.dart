@@ -129,6 +129,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
         return;
       }
 
+      Navigator.pop(context);
+
       if (category == null) {
         // Add new category
         await categoryCollection.add({
@@ -146,14 +148,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
       }
 
       _categoryController.clear();
-      Navigator.pop(context);
+      // Navigator.pop(context);
       setState(() {
         isLoading = false;
         alreadyExists = false;
       });
     } catch (error) {
       Fluttertoast.showToast(msg: "Failed to process category: $error");
-      Navigator.pop(context);
+      // Navigator.pop(context);
     } finally {
       setState(() {
         isLoading = false;
@@ -230,7 +232,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Text(
-                'Categories',
+                'Categories (...)',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

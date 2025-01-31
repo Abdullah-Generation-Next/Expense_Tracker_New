@@ -61,10 +61,10 @@ class LoadAllFieldsController extends GetxController {
   RxBool loadAdminSwitch = false.obs;
   RxBool deleteLoader = false.obs;
 
-  Future<bool> getAdminSavedPinFromFirestore(userId) async {
+  Future<bool> getAdminSavedPinFromFirestore(adminId) async {
     loadAdminSwitch.value = true;
     try {
-      DocumentSnapshot adminDoc = await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance.collection('Admin').doc(adminId).get();
 
       if (adminDoc.exists && adminDoc.data() != null) {
         return (adminDoc.data() as Map<String, dynamic>)['isSwitchOn'] == true;
@@ -81,6 +81,7 @@ class LoadAllFieldsController extends GetxController {
     bool isSwitchOn = await getAdminSavedPinFromFirestore(adminId);
     // setState(() {
     isAdminPinEnabled.value = isSwitchOn;
+    print(isAdminPinEnabled.value);
     // });
   }
 
@@ -107,6 +108,7 @@ class LoadAllFieldsController extends GetxController {
     bool isSwitchOn = await getEmployeeSavedPinFromFirestore(adminId);
     // setState(() {
     isEmployeePinEnabled.value = isSwitchOn;
+    print(isEmployeePinEnabled.value);
     // });
   }
 
@@ -187,6 +189,9 @@ class LoadAllFieldsController extends GetxController {
 class AdminProfileController extends GetxController {
   RxString finalImageUrl = ''.obs;
   Rx<File?> image = Rx<File?>(null);
+
+  // TextEditingController dialogController = TextEditingController();
+  // RxBool showRow = false.obs;
 
   final ImagePicker _picker = ImagePicker();
 

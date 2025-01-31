@@ -80,7 +80,7 @@ class _SignupPageState extends State<SignupPage> {
             'referralCode': referralCode,
             'allow_date_to_change': 'Yes',
             'is_auto_approve': 'Yes',
-            'site_label': 'General',
+            'site_label': 'Employee',
             'show_delete_button': 'Yes',
           });
 

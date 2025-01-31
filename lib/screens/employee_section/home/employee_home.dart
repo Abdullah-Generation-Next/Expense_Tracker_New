@@ -713,6 +713,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                       ),
                     ),
+                    /* Old Design
                     Padding(
                       padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
                       child: Card(
@@ -901,6 +902,169 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                         ),
                       ),
                     ),
+                    */
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: _getFilteredStream(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(
+                                child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ));
+                          }
+                          if (snapshot.hasError) {
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          }
+
+                          final List<DocumentSnapshot> documents = snapshot.data!.docs;
+
+                          // Calculate total credit and debit amounts
+                          double totalCredit = 0.0;
+                          double totalDebit = 0.0;
+
+                          documents.forEach((doc) {
+                            double amount = double.tryParse(doc['amount'].toString()) ?? 0.0;
+                            String transactionType = doc['transactionType'].toString().toLowerCase();
+                            if (transactionType == 'credit') {
+                              totalCredit += amount;
+                            } else if (transactionType == 'debit') {
+                              totalDebit += amount;
+                            }
+                          });
+
+                          // Calculate final amount (total credit - total debit)
+                          double finalAmount = totalCredit - totalDebit;
+
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Card(
+                                  elevation: 3,
+                                  margin: EdgeInsets.zero,
+                                  child: ListTile(
+                                    tileColor: kwhite,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    title: FittedBox(
+                                      // fit: BoxFit.contain,
+                                      child: Center(
+                                        child: Text(
+                                          'Total Credit',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            fontFamily: 'Inter',
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Text(
+                                          '₹${totalCredit.toStringAsFixed(2)}',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Card(
+                                  elevation: 3,
+                                  margin: EdgeInsets.zero,
+                                  child: ListTile(
+                                    tileColor: kwhite,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    title: FittedBox(
+                                      // fit: BoxFit.contain,
+                                      child: Center(
+                                        child: Text(
+                                          'Total Debit',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            fontFamily: 'Inter',
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Text(
+                                          '₹${totalDebit.toStringAsFixed(2)}',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Card(
+                                  elevation: 3,
+                                  margin: EdgeInsets.zero,
+                                  child: ListTile(
+                                    tileColor: kwhite,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    title: FittedBox(
+                                      // fit: BoxFit.contain,
+                                      child: Center(
+                                        child: Text(
+                                          'Balance',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            fontFamily: 'Inter',
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              (finalAmount >= 0.0)
+                                                  ? '₹${finalAmount % 1 == 0 ? finalAmount.toStringAsFixed(0) : finalAmount.toStringAsFixed(2)} '
+                                                  : '₹${finalAmount.abs() % 1 == 0 ? finalAmount.abs().toStringAsFixed(0) : finalAmount.abs().toStringAsFixed(2)} ',
+                                              style: TextStyle(fontSize: 14),
+                                            ),
+                                            Text(
+                                              totalDebit > totalCredit ? 'Dr' : 'Cr',
+                                              style: TextStyle(
+                                                  color: finalAmount >= 0
+                                                      // transactionType == 'credit'
+                                                      ? const Color(0xFF6F9C40)
+                                                      : const Color(0xFFAE2F09),
+                                                  fontWeight: FontWeight.bold),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
                 Expanded(
@@ -997,7 +1161,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                           return Card(
                             color: kwhite,
                             elevation: 3,
-                            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                            margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -1073,6 +1237,94 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                           );
                         },
                       );
+                      /*
+                      return ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        itemCount: 10,
+                        itemBuilder: (context, index) {
+                          // String category = uniqueCategories[index];
+                          // double totalAmount = categoryTotals[category]!;
+                          // String transactionType = categoryTransactionType[category]!;
+
+                          // String category = uniqueCategories[index];
+                          // double totalCredit = categoryCredits[category] ?? 0.0;
+                          // double totalDebit = categoryDebits[category] ?? 0.0;
+                          // double finalAmount = totalCredit - totalDebit;
+
+                          return Card(
+                            color: kwhite,
+                            elevation: 3,
+                            margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              minVerticalPadding: 20,
+                              tileColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              onTap: () {
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => CategoryDetailsPage(
+                                //       userId: widget.userId,
+                                //       category: category,
+                                //       // userDoc: widget.userDoc,
+                                //       date: selectedMonthText,
+                                //       // You may need to pass the document if required
+                                //     ),
+                                //   ),
+                                // );
+                              },
+                              leading: Icon(Icons.shopping_bag, color: Colors.grey[500]),
+                              title: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("Hello"),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Text(
+                                          // '₹${totalAmount.abs().toStringAsFixed(2)}',
+                                          '₹1200',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      // SizedBox(
+                                      //   width: 5,
+                                      // ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFDBE6CF),
+                                          borderRadius: BorderRadius.circular(5),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                        child: Text(
+                                          '${/*transactionType == 'credit'*/ 'Dr'}',
+                                          style: TextStyle(
+                                            color: const Color(0xFFDBE6CF),
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                      */
                     },
                   ),
                 ),
@@ -1332,7 +1584,7 @@ class CategoryDetailsPage extends StatelessWidget {
               ),
               // This card is positioned to overlap with the AppBar
               Padding(
-                padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+                padding: const EdgeInsets.only(top: 15, left: 20, right: 20),
                 child: Card(
                   elevation: 5,
                   color: Colors.transparent,
@@ -1442,6 +1694,10 @@ class CategoryDetailsPage extends StatelessWidget {
                         return Card(
                             color: kwhite,
                             elevation: 5,
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 5,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

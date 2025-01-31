@@ -54,7 +54,7 @@ class Const {
           updates['is_auto_approve'] = "Yes";
         }
         if (!adminData.containsKey('site_label')) {
-          updates['site_label'] = "General";
+          updates['site_label'] = "Employee";
         }
 
         if (updates.isNotEmpty) {
@@ -66,19 +66,19 @@ class Const {
 
         controller.allowDateToChange.value = adminData['allow_date_to_change'] ?? "Yes";
         controller.isAutoApprove.value = adminData['is_auto_approve'] ?? "Yes";
-        controller.siteLable.value = adminData['site_label'] ?? "General";
+        controller.siteLable.value = adminData['site_label'] ?? "Employee";
         controller.showDeleteButton.value = adminData['show_delete_button'] ?? "Yes";
       } else {
         await adminRef.set({
           'show_delete_button': "Yes",
           'allow_date_to_change': "Yes",
           'is_auto_approve': "Yes",
-          'site_label': "General",
+          'site_label': "Employee",
         }, SetOptions(merge: true));
 
         controller.allowDateToChange.value = "Yes";
         controller.isAutoApprove.value = "Yes";
-        controller.siteLable.value = "General";
+        controller.siteLable.value = "Employee";
         controller.showDeleteButton.value = "Yes";
 
         print("Default fields created in a new document.");
@@ -214,7 +214,7 @@ class Const {
         controller.referralCode.value = adminData['referralCode'] ?? '';
         controller.allowDateToChange.value = adminData['allow_date_to_change'] ?? 'Yes';
         controller.isAutoApprove.value = adminData['is_auto_approve'] ?? 'Yes';
-        controller.siteLable.value = adminData['site_label'] ?? 'General';
+        controller.siteLable.value = adminData['site_label'] ?? 'Employee';
         controller.showDeleteButton.value = adminData['show_delete_button'] ?? 'Yes';
       } else {
         print("Admin document does not exist");
@@ -230,19 +230,31 @@ class Const {
 }
 
 /*
-  Delete account wala for IOS
-  categories replications --
+  Delete account wala for IOS👉
+  categories replications -- specially ask sir
   image edit profile mein nahi dala fir bhi bohot load ley che image path update hone par hi lena chahiye --
   camera and gallery nu dialog show --
   Splash timing
   profile employee icons and logo show and search card design --
-  set pin screen init load close
+  set pin screen init load close👉
   all profile same setup as admin
   pending background color
+  all max 100 data added in fazalcreation51 Account added👉
+  all max 100 data added in mohsin@gmail.com Account👉
+  all max 100 data added in create employees multiples👉
+
+  three boxes total credit, total debit and balance separately
+  General to Employee
+  Divider and delete Dialog add validation type DELETE... in Account delete
+  card design update to theme color
 
   Location wala
   Share Wala
   open excel inside app
+  check filter wise pdf and excel share creations
+  Card design as spin in iCheck sir ask fields
+
   Home Page par category wise filterations
+  if we are updating in expense it is not updating inside this screen CategoryExpensePage() dialog why?
   Notifications wala
 */

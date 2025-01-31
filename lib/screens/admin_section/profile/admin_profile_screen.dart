@@ -48,6 +48,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     }
   }
 
+  TextEditingController dialogController = TextEditingController();
+
   @override
   void initState() {
     // setState(() {
@@ -63,6 +65,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   }
 
   Future<void> loadAdminCompanyLogo(String adminId) async {
+    await loadController.updateAdminPinStatusFromFirestore(widget.adminId);
     try {
       DocumentSnapshot adminDoc = await FirebaseFirestore.instance.collection('Admin').doc(adminId).get();
 
@@ -1315,6 +1318,71 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             },
                           ),
                         ),
+                        /*Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey,
+                                  thickness: 0.5,
+                                ),
+                              ),
+                              SizedBox(width: 10,),
+                              Text(
+                                "Account Deletion"
+                              ),
+                              SizedBox(width: 10,),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey,
+                                  thickness: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),*/
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1.5,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    gradient: LinearGradient(
+                                      colors: [Colors.transparent, Colors.grey, Colors.grey],
+                                      // stops: [0.0, 0.5, 1.0], // Center strong, edges fade out
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                "Account Deletion",
+                                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 1.5,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    gradient: LinearGradient(
+                                      colors: [Colors.grey, Colors.grey, Colors.transparent],
+                                      // stops: [0.0, 0.5, 1.0], // Center strong, edges fade out
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         Card(
                           margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                           shape: RoundedRectangleBorder(
@@ -1395,7 +1463,9 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   );
                                 },
                               );*/
-                              showDeleteAdminDialog(
+                              // showDeleteAdminDialog(
+                              //     context, widget.adminId, SharedPref.get(prefKey: PrefKey.adminEmail) ?? "");
+                              showDeleteConfirmationDialog(
                                   context, widget.adminId, SharedPref.get(prefKey: PrefKey.adminEmail) ?? "");
                             },
                           ),
@@ -1415,12 +1485,12 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                         const Text(
                                           '''
                                             Follow the steps
-                                            
+
                                             Cashbook Local Backup
                                             1. Click on 'Backup' Button.
                                             2. Select/Create the specific folder on local storage to backup. (older one is 'cashbook_backup' or create a new one)
                                             3. Keep the file name 'Clients.csv' and 'Transactions.csv' in the same folder.
-                                            4. That's it. Backup Done. 
+                                            4. That's it. Backup Done.
                                             ''',
                                           style:
                                               TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w400),
@@ -1499,6 +1569,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
   void showDeleteAdminDialog(BuildContext context, String adminId, String adminEmail) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: Text('⚠️ Confirm Deletion'),
@@ -1516,7 +1587,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               onPressed: () {
                 // Show second confirmation
                 Navigator.pop(context);
-                showSecondConfirmation(context, adminId, adminEmail);
+                showDeleteConfirmationDialog(context, adminId, adminEmail);
               },
               child: Text('Proceed', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
@@ -1526,9 +1597,248 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 
+  void showDeleteConfirmationDialog(BuildContext context, String adminId, String adminEmail) {
+    dialogController.clear();
+
+    bool isLoading = false;
+    bool showRow = true;
+    final FocusNode dialogFocusNode = FocusNode();
+    GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            titlePadding: EdgeInsets.zero,
+            contentPadding: EdgeInsets.zero,
+            title: Container(
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(27), topRight: Radius.circular(27)),
+                color: Colors.red.withOpacity(0.1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Delete this Admin?',
+                    textScaleFactor: 0.8,
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Tooltip(
+                      message: "Close",
+                      child: Icon(
+                        Icons.cancel,
+                        color: themecolor,
+                        size: 30,
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: EdgeInsets.zero,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                  ),
+                  child: Text(
+                    "Doing so will permanently delete all associated data, including employees and expenses.",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.start,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black, // Default text color
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: "Confirm that you want to delete this collection by typing its ID: ",
+                                    style: TextStyle(fontWeight: FontWeight.w400),
+                                  ),
+                                  TextSpan(
+                                    text: "DELETE",
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Form(
+                        key: formKey,
+                        child: TextFormField(
+                          controller: dialogController,
+                          focusNode: dialogFocusNode,
+                          textCapitalization: TextCapitalization.characters,
+                          validator: (value) {
+                            return null;
+                          },
+                          onChanged: (value) {
+                            setState(() {
+                              showRow = value.isEmpty;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            // border: OutlineInputBorder(),
+                            hintText: "Type \"DELETE\"",
+                            // labelText: "",
+                            labelStyle:
+                                TextStyle(color: dialogFocusNode.hasFocus ? themecolor : Colors.grey.withOpacity(0.95)),
+                            // ignore: deprecated_member_use
+                            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.95)),
+                            errorText: (dialogController.text.isNotEmpty &&
+                                    dialogController.text != "DELETE" &&
+                                    dialogController.text != dialogController.text.toUpperCase())
+                                ? "Block letters required"
+                                : null,
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: dialogFocusNode.hasFocus ? themecolor : Colors.black),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: dialogFocusNode.hasFocus ? themecolor : Colors.black, width: 1.5),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.red),
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: dialogFocusNode.hasFocus ? themecolor : Colors.black),
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 0),
+                      showRow == true
+                          ? Column(
+                              children: [
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      CupertinoIcons.info,
+                                      color: Colors.red,
+                                      size: 15,
+                                    ),
+                                    SizedBox(
+                                      width: 5,
+                                    ),
+                                    Text(
+                                      "Required",
+                                      style: TextStyle(color: Colors.red),
+                                    )
+                                  ],
+                                ),
+                              ],
+                            )
+                          : SizedBox.shrink(),
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel', style: TextStyle(color: Colors.black)),
+                style: ButtonStyle(
+                    // ignore: deprecated_member_use
+                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    // ignore: deprecated_member_use
+                    backgroundColor: MaterialStatePropertyAll(Colors.transparent),
+                    // ignore: deprecated_member_use
+                    foregroundColor: MaterialStatePropertyAll(Colors.transparent)),
+              ),
+              TextButton(
+                onPressed: isLoading == true
+                    ? null
+                    : () {
+                        if (formKey.currentState!.validate()) {
+                          showRow = false;
+                          if (dialogController.text == "DELETE") {
+                            setState(() => isLoading = true);
+                            // Simulate verification delay (2 seconds)
+                            Future.delayed(Duration(seconds: 2), () {
+                              // After verification, close dialog and show final confirmation
+                              Navigator.pop(context);
+                              showSecondConfirmation(context, adminId, adminEmail);
+                            });
+                          } else {
+                            // setState(() {}); // Refresh UI to show validation error
+                          }
+                        } else {
+                          showRow = true;
+                        }
+                      },
+                style: ButtonStyle(
+                  // ignore: deprecated_member_use
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  // ignore: deprecated_member_use
+                  backgroundColor: MaterialStatePropertyAll(
+                    (dialogController.text.isNotEmpty && dialogController.text == "DELETE")
+                        // ignore: deprecated_member_use
+                        ? Colors.red.withOpacity(0.10)
+                        // ignore: deprecated_member_use
+                        : Colors.grey.withOpacity(0.25),
+                  ),
+                  // ignore: deprecated_member_use
+                  foregroundColor: MaterialStatePropertyAll(
+                    (dialogController.text.isNotEmpty && dialogController.text == "DELETE") ? Colors.red : Colors.white,
+                  ),
+                ),
+                child: isLoading == true
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text('Delete',
+                        style: TextStyle(
+                            // color: Colors.red,
+                            fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
   void showSecondConfirmation(BuildContext context, String adminId, String adminEmail) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: Text('🚨 Final Confirmation'),

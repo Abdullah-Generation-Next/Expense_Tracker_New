@@ -61,6 +61,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
   }
 
   Future<void> loadEmployeeCompanyLogo(String userId) async {
+    await loadController.updateEmployeePinStatusFromFirestore(widget.userId);
     try {
       DocumentSnapshot adminDoc = await FirebaseFirestore.instance.collection('Users').doc(userId).get();
 
@@ -942,7 +943,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
                                 Card(
                                   margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
                                   color: Colors.white,
                                   elevation: 0,
@@ -960,6 +961,59 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
                                       ],
                                     ),
                                     child: ProfileCard(),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Card(
+                                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  color: Colors.white,
+                                  elevation: 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      // color: Colors.purple,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          // ignore: deprecated_member_use
+                                          color: themecolor.withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: Offset(6, 5), // Shadow position
+                                        ),
+                                      ],
+                                    ),
+                                    child: ProfileCard2(),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Card(
+                                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  color: Colors.white,
+                                  elevation: 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      // color: Colors.purple,
+                                      borderRadius: BorderRadius.circular(20),
+                                      // border: Border.all(color: Color(0xffffecb5), width: 1),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          // ignore: deprecated_member_use
+                                          color: Color(0xaaffffcd).withOpacity(0.3),
+                                          blurRadius: 4,
+                                          offset: Offset(6, 5), // Shadow position
+                                        ),
+                                      ],
+                                    ),
+                                    child: ProfileCard3(),
                                   ),
                                 ),
                               ]),
@@ -1439,6 +1493,791 @@ class ProfileCard extends StatelessWidget {
                               // fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )),
+    );
+  }
+
+  Widget infoText(String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+//ignore: must_be_immutable
+class ProfileCard2 extends StatelessWidget {
+  LoadAllFieldsController controller = Get.put(LoadAllFieldsController());
+
+  Future<void> launchEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=Hello&body=How are you?',
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      throw 'Could not launch $emailUri';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          // colors: [Color(0xFFAB47BC), Color(0xFF7E57C2)],
+          colors: [
+            // Color(0xFF7E57C2),
+            // ignore: deprecated_member_use
+            themecolor.withOpacity(0.75),
+            // Color(0xFF7E57C2),
+            // Color(0xFF7E57C2),
+            // ignore: deprecated_member_use
+            themecolor.withOpacity(0.75),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Obx(() => Row(
+            children: [
+              // CircleAvatar(
+              //   radius: 30,
+              //   backgroundImage: NetworkImage(
+              //       controller.companyLogo.value
+              //       ),
+              // ),
+              Container(
+                height: 105,
+                width: 100,
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  // image: DecorationImage(
+                  //   image: NetworkImage(
+                  //     controller.companyLogo.value,
+                  //   ),fit: BoxFit.cover,
+                  // )
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Obx(() => (controller.companyLogo.value != "")
+                      ? GestureDetector(
+                          onTap: () async {
+                            double screenHeight = MediaQuery.of(context).size.height;
+                            double targetHeight = screenHeight * 0.75;
+                            await showDialog(
+                              context: context,
+                              builder: (_) => Center(
+                                child: Container(
+                                  height: targetHeight,
+                                  width: double.infinity,
+                                  margin: EdgeInsets.symmetric(horizontal: 25),
+                                  // color: Color(0xffeeeeee),
+                                  color: Colors.transparent,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: PhotoViewGallery.builder(
+                                        itemCount: 1,
+                                        builder: (context, index) {
+                                          return PhotoViewGalleryPageOptions(
+                                            imageProvider: NetworkImage(controller.companyLogo.value),
+                                            minScale: PhotoViewComputedScale.contained * 1,
+                                            maxScale: PhotoViewComputedScale.covered * 2,
+                                          );
+                                        },
+                                        scrollPhysics: BouncingScrollPhysics(),
+                                        backgroundDecoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                        ),
+                                        pageController: PageController(),
+                                        loadingBuilder: (context, progress) {
+                                          if (progress == null) {
+                                            return SizedBox.shrink();
+                                          } else {
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value: progress.expectedTotalBytes != null
+                                                    ? progress.cumulativeBytesLoaded /
+                                                        (progress.expectedTotalBytes ?? 1)
+                                                    : null,
+                                                color: Colors.white, // Set the color to white
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Image.network(
+                            controller.companyLogo.value,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                              if (loadingProgress == null) {
+                                // If the image has been loaded, show the image
+                                return child;
+                              } else {
+                                // While loading, show the CircularProgressIndicator
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            (loadingProgress.expectedTotalBytes ?? 1)
+                                        : null,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (_) => Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 50, right: 50),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.blueGrey,
+                                        // image: DecorationImage(
+                                        //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 175,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.transparent,
+                              border: Border.all(color: Colors.white, width: 0.5),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 60,
+                                ),
+                                SizedBox(
+                                  height: 0,
+                                ),
+                                Text(
+                                  "No Photo",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            /*Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 60,
+                        ),
+                      ),
+                      SizedBox(height: 5,),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2.5),
+                        child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Text("No Photo",textAlign: TextAlign.center,style: TextStyle(
+                              fontWeight: FontWeight.w600,color: Colors.white
+                            ),)),
+                      ),
+                    ],
+                  ),*/
+                          ),
+                        )),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.contain,
+                      child: Text(
+                        controller.companyName.value,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        launchEmail(controller.email.value);
+                      },
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(
+                          controller.email.value,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            "Owner :",
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        SizedBox(
+                          width: 120,
+                          child: Text(
+                            "${controller.username.value}",
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        // ignore: deprecated_member_use
+                        launch("tel:${controller.phone.value}");
+                      },
+                      child: Row(
+                        children: [
+                          Text(
+                            "Contact :",
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Spacer(),
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              "${controller.phone.value}",
+                              textAlign: TextAlign.end,
+                              maxLines: 1,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                // fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Address :",
+                          style: GoogleFonts.poppins(
+                            // fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Spacer(),
+                        SizedBox(
+                          width: 120,
+                          child: Text(
+                            "${controller.companyAddress.value}",
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )),
+    );
+  }
+
+  Widget infoText(String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+//ignore: must_be_immutable
+class ProfileCard3 extends StatelessWidget {
+  LoadAllFieldsController controller = Get.put(LoadAllFieldsController());
+
+  Future<void> launchEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=Hello&body=How are you?',
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      throw 'Could not launch $emailUri';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          // colors: [Color(0xFFAB47BC), Color(0xFF7E57C2)],
+          colors: [
+            // Color(0xFF7E57C2),
+            // ignore: deprecated_member_use
+            Color(0xaaffffcd).withOpacity(0.75),
+            // Color(0xFF7E57C2),
+            // Color(0xFF7E57C2),
+            // ignore: deprecated_member_use
+            Color(0xaaffffcd).withOpacity(0.75),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Color(0xffffecb5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Obx(() => Row(
+            children: [
+              // CircleAvatar(
+              //   radius: 30,
+              //   backgroundImage: NetworkImage(
+              //       controller.companyLogo.value
+              //       ),
+              // ),
+              Container(
+                height: 105,
+                width: 100,
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  // image: DecorationImage(
+                  //   image: NetworkImage(
+                  //     controller.companyLogo.value,
+                  //   ),fit: BoxFit.cover,
+                  // )
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Obx(() => (controller.companyLogo.value != "")
+                      ? GestureDetector(
+                          onTap: () async {
+                            double screenHeight = MediaQuery.of(context).size.height;
+                            double targetHeight = screenHeight * 0.75;
+                            await showDialog(
+                              context: context,
+                              builder: (_) => Center(
+                                child: Container(
+                                  height: targetHeight,
+                                  width: double.infinity,
+                                  margin: EdgeInsets.symmetric(horizontal: 25),
+                                  // color: Color(0xffeeeeee),
+                                  color: Colors.transparent,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: PhotoViewGallery.builder(
+                                        itemCount: 1,
+                                        builder: (context, index) {
+                                          return PhotoViewGalleryPageOptions(
+                                            imageProvider: NetworkImage(controller.companyLogo.value),
+                                            minScale: PhotoViewComputedScale.contained * 1,
+                                            maxScale: PhotoViewComputedScale.covered * 2,
+                                          );
+                                        },
+                                        scrollPhysics: BouncingScrollPhysics(),
+                                        backgroundDecoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                        ),
+                                        pageController: PageController(),
+                                        loadingBuilder: (context, progress) {
+                                          if (progress == null) {
+                                            return SizedBox.shrink();
+                                          } else {
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value: progress.expectedTotalBytes != null
+                                                    ? progress.cumulativeBytesLoaded /
+                                                        (progress.expectedTotalBytes ?? 1)
+                                                    : null,
+                                                color: Colors.white, // Set the color to white
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Image.network(
+                            controller.companyLogo.value,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                              if (loadingProgress == null) {
+                                // If the image has been loaded, show the image
+                                return child;
+                              } else {
+                                // While loading, show the CircularProgressIndicator
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            (loadingProgress.expectedTotalBytes ?? 1)
+                                        : null,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (_) => Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 50, right: 50),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 250,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.blueGrey,
+                                        // image: DecorationImage(
+                                        //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 175,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.transparent,
+                              border: Border.all(color: Color(0xff664d03), width: 0.75),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  color: Color(0xff664d03),
+                                  size: 60,
+                                ),
+                                SizedBox(
+                                  height: 0,
+                                ),
+                                Text(
+                                  "No Photo",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xff664d03)),
+                                ),
+                              ],
+                            ),
+                            /*Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 60,
+                        ),
+                      ),
+                      SizedBox(height: 5,),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2.5),
+                        child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Text("No Photo",textAlign: TextAlign.center,style: TextStyle(
+                              fontWeight: FontWeight.w600,color: Colors.white
+                            ),)),
+                      ),
+                    ],
+                  ),*/
+                          ),
+                        )),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.contain,
+                      child: Text(
+                        controller.companyName.value,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff664d03),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        launchEmail(controller.email.value);
+                      },
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(
+                          controller.email.value,
+                          // ignore: deprecated_member_use
+                          textScaleFactor: 1,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Color(0xff664d03),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            "Owner :",
+                            // ignore: deprecated_member_use
+                            textScaleFactor: 1,
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xff664d03),
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        SizedBox(
+                          width: 120,
+                          child: Text(
+                            "${controller.username.value}",
+                            // ignore: deprecated_member_use
+                            textScaleFactor: 1,
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff664d03),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        // ignore: deprecated_member_use
+                        launch("tel:${controller.phone.value}");
+                      },
+                      child: Row(
+                        children: [
+                          Text(
+                            "Contact :",
+                            // ignore: deprecated_member_use
+                            textScaleFactor: 1,
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xff664d03),
+                            ),
+                          ),
+                          Spacer(),
+                          SizedBox(
+                            width: 120,
+                            child: Text(
+                              "${controller.phone.value}",
+                              // ignore: deprecated_member_use
+                              textScaleFactor: 1,
+                              textAlign: TextAlign.end,
+                              maxLines: 1,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                // fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff664d03),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Address :",
+                          // ignore: deprecated_member_use
+                          textScaleFactor: 1,
+                          style: GoogleFonts.poppins(
+                            // fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xff664d03),
+                          ),
+                        ),
+                        Spacer(),
+                        SizedBox(
+                          width: 120,
+                          child: Text(
+                            "${controller.companyAddress.value}",
+                            // ignore: deprecated_member_use
+                            textScaleFactor: 1,
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              // fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff664d03),
                             ),
                           ),
                         ),

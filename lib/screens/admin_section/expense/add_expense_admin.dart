@@ -11,8 +11,8 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-
 import '../../../getx_controller/load_excel_controller.dart';
+import 'dart:math';
 
 enum TransactionType { credit, debit }
 
@@ -63,6 +63,110 @@ class _AddAdminExpenseState extends State<AddAdminExpense> {
   //     });
   //   }
   // }
+
+  /* Random Add 100 records
+  Future<void> submitForm(BuildContext context, widget) async {
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final expenseCollection = FirebaseFirestore.instance
+        .collection('Admin')
+        .doc(widget.userDoc.id)
+        .collection('expense');
+
+    List<String> categories = [
+      'Food',
+      'H.K. Material',
+      'Veg',
+      'Fuel',
+      'Vehicle',
+      'Allowance',
+      'Bonus',
+      'Business',
+      'Investment Income',
+      'Other Income',
+      'Pension',
+      'Salary',
+      'Food expenses',
+      'Transportation',
+      'Subscriptions/Streaming Services',
+      'Clothing',
+      'Travel',
+      'Gifts',
+      'Charitable Giving'
+    ];
+
+    List<String> paymentModes = ['Cash', 'Net Banking', 'UPI'];
+    List<String> remarks = [
+      'Vehicle',
+      'Quick Lunch',
+      'Evening Snack',
+      'Daily Commute',
+      'Office Supplies',
+      'Fuel Refill',
+      'Grocery Shopping',
+      'Subscription Fee',
+      'Monthly Rent',
+      'Gift Purchase',
+      'Medical Bill'
+    ];
+
+    double amount = 245;
+    DateTime date = DateTime(2024, 1, 30);
+    TimeOfDay time = TimeOfDay(hour: 17, minute: 41);
+    Random random = Random();
+
+    try {
+      for (int i = 1; i <= 100; i++) {
+        String title = 'Panipuri $i';
+        String category = categories[random.nextInt(categories.length)];
+        String payment = paymentModes[random.nextInt(paymentModes.length)];
+        String remark = remarks[random.nextInt(remarks.length)];
+        String transactionType = random.nextBool() ? 'Credit' : 'Debit';
+
+        await expenseCollection.add({
+          'title': title,
+          'amount': amount,
+          'date': "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+          'time': "${time.hourOfPeriod}:${time.minute.toString().padLeft(2, '0')} ${time.period == DayPeriod.am ? 'AM' : 'PM'}",
+          'category': category,
+          'payment_mode': payment,
+          'transactionType': transactionType,
+          'remark': remark,
+          'status': loadController.isAutoApprove.value == "No" ? 'Pending' : 'Approved',
+        });
+
+        amount += 20;
+        date = date.add(Duration(days: 2));
+        time = TimeOfDay(hour: time.hour, minute: (time.minute + 1) % 60);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('100 expense records added successfully'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add expenses: $error'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+  */
 
   Future<void> submitForm(BuildContext context, widget) async {
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) {

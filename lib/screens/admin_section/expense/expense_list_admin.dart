@@ -749,13 +749,16 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(
-                    width: 10,
+                    width: 20,
                   ),
                   Expanded(
                       child: Text(
                     title
                     // "Hello world how are you is every thing all right i cant find you "
                     ,
+                    softWrap: true,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
                   )),
                 ],
@@ -829,7 +832,7 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         SizedBox(
-                          width: 10,
+                          width: 20,
                         ),
                         // Spacer(),
                         Expanded(
@@ -837,6 +840,9 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
                           remark
                           // "Hello world how are you is every thing all right i cant find you "
                           ,
+                          softWrap: true,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.end,
                         )),
                       ],
@@ -1636,7 +1642,10 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          data['title'],
+                          "${data['title']}",
+                          maxLines: 2,
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Inter',

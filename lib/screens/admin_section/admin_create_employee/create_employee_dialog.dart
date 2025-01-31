@@ -608,7 +608,11 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('Users')
-                      .where('adminId', isEqualTo: widget.adminId)
+                      .where(
+                        'adminId',
+                        isEqualTo: widget.adminId,
+                      )
+                      .orderBy(FieldPath.documentId, descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
                     // if (!snapshot.hasData) {
@@ -659,7 +663,8 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             title: Text(
-                                userDoc.data().toString().contains('username') ? userDoc['username'] : 'No username'),
+                              "${userDoc.data().toString().contains('username') ? userDoc['username'] : 'No username'}",
+                            ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

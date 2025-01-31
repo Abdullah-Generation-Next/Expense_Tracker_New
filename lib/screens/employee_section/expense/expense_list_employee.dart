@@ -893,13 +893,16 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(
-                      width: 10,
+                      width: 20,
                     ),
                     Expanded(
                         child: Text(
                       '${data['title']}'
                       // "Hello world how are you is every thing all right i cant find you "
                       ,
+                      softWrap: true,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
                     )),
                   ],
@@ -977,13 +980,16 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           SizedBox(
-                            width: 10,
+                            width: 20,
                           ),
                           Expanded(
                               child: Text(
                             '${data['remark']}'
                             // "Hello world how are you is every thing all right i cant find you "
                             ,
+                            softWrap: true,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.end,
                           )),
                         ],
@@ -1274,7 +1280,10 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              data['title'],
+                              "${data['title']}",
+                              maxLines: 2,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -1528,6 +1537,7 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Card(
