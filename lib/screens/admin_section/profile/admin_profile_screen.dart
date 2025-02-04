@@ -134,7 +134,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         backgroundColor: themecolor,
         automaticallyImplyLeading: false,
         title: Text(
-          "Profile",
+          "Admin Profile",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Inter', color: kwhite),
         ),
         elevation: 0,
@@ -149,10 +149,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               children: [
                 Column(
                   children: [
-                    DrawerHeader(
-                      decoration: const BoxDecoration(
-                        color: Colors.transparent,
-                      ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -163,45 +161,110 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               /* Old Updated to New
-                              (updatedUserDoc['company_logo'] != null && updatedUserDoc['company_logo'] != "")
-                                  ?
-                                  // CircleAvatar(
-                                  //         radius: 30,
-                                  //         foregroundImage: NetworkImage(updatedUserDoc['company_logo'] ?? ""),
-                                  //         backgroundColor: Colors.transparent,
-                                  //         child: GestureDetector(
-                                  //           onTap: () async {
-                                  //             await showDialog(
-                                  //               context: context,
-                                  //               builder: (_) => Center(
-                                  //                 child: Padding(
-                                  //                   padding: const EdgeInsets.only(left: 50, right: 50),
-                                  //                   child: GestureDetector(
-                                  //                     onTap: () {
-                                  //                       Navigator.pop(context);
-                                  //                     },
-                                  //                     child: Container(
-                                  //                       width: double.infinity,
-                                  //                       height: 250,
-                                  //                       decoration: BoxDecoration(
-                                  //                         shape: BoxShape.circle,
-                                  //                         color: Colors.transparent,
-                                  //                         image: DecorationImage(
-                                  //                             image: NetworkImage(updatedUserDoc['company_logo'] ?? ""),
-                                  //                             fit: BoxFit.fill),
-                                  //                       ),
-                                  //                     ),
-                                  //                   ),
-                                  //                 ),
-                                  //               ),
-                                  //             );
-                                  //           },
-                                  //         ),
-                                  //       )
-                                  CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.transparent,
-                                      child: GestureDetector(
+                                (updatedUserDoc['company_logo'] != null && updatedUserDoc['company_logo'] != "")
+                                    ?
+                                    // CircleAvatar(
+                                    //         radius: 30,
+                                    //         foregroundImage: NetworkImage(updatedUserDoc['company_logo'] ?? ""),
+                                    //         backgroundColor: Colors.transparent,
+                                    //         child: GestureDetector(
+                                    //           onTap: () async {
+                                    //             await showDialog(
+                                    //               context: context,
+                                    //               builder: (_) => Center(
+                                    //                 child: Padding(
+                                    //                   padding: const EdgeInsets.only(left: 50, right: 50),
+                                    //                   child: GestureDetector(
+                                    //                     onTap: () {
+                                    //                       Navigator.pop(context);
+                                    //                     },
+                                    //                     child: Container(
+                                    //                       width: double.infinity,
+                                    //                       height: 250,
+                                    //                       decoration: BoxDecoration(
+                                    //                         shape: BoxShape.circle,
+                                    //                         color: Colors.transparent,
+                                    //                         image: DecorationImage(
+                                    //                             image: NetworkImage(updatedUserDoc['company_logo'] ?? ""),
+                                    //                             fit: BoxFit.fill),
+                                    //                       ),
+                                    //                     ),
+                                    //                   ),
+                                    //                 ),
+                                    //               ),
+                                    //             );
+                                    //           },
+                                    //         ),
+                                    //       )
+                                    CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Colors.transparent,
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            await showDialog(
+                                              context: context,
+                                              builder: (_) => Center(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.only(left: 50, right: 50),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: Container(
+                                                      width: double.infinity,
+                                                      height: 250,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color: Colors.transparent,
+                                                        image: DecorationImage(
+                                                          image: NetworkImage(updatedUserDoc['company_logo'] ?? ""),
+                                                          fit: BoxFit.fill,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: updatedUserDoc['company_logo'] != null &&
+                                                  updatedUserDoc['company_logo'] != ""
+                                              ? Container(
+                                                  width: 100,
+                                                  height: 100,
+                                                  child: ClipOval(
+                                                    clipBehavior: Clip.hardEdge,
+                                                    child: Image.network(
+                                                      updatedUserDoc['company_logo'] ?? "",
+                                                      fit: BoxFit.cover,
+                                                      loadingBuilder: (BuildContext context, Widget child,
+                                                          ImageChunkEvent? loadingProgress) {
+                                                        if (loadingProgress == null) {
+                                                          // If the image has been loaded, show the image
+                                                          return child;
+                                                        } else {
+                                                          // While loading, show the CircularProgressIndicator
+                                                          return Center(
+                                                            child: CircularProgressIndicator(
+                                                              value: loadingProgress.expectedTotalBytes != null
+                                                                  ? loadingProgress.cumulativeBytesLoaded /
+                                                                      (loadingProgress.expectedTotalBytes ?? 1)
+                                                                  : null,
+                                                            ),
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  Icons.person,
+                                                  color: Colors.white,
+                                                  size: 30,
+                                                ),
+                                        ),
+                                      )
+                                    : GestureDetector(
                                         onTap: () async {
                                           await showDialog(
                                             context: context,
@@ -217,11 +280,14 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                                     height: 250,
                                                     decoration: BoxDecoration(
                                                       shape: BoxShape.circle,
-                                                      color: Colors.transparent,
-                                                      image: DecorationImage(
-                                                        image: NetworkImage(updatedUserDoc['company_logo'] ?? ""),
-                                                        fit: BoxFit.fill,
-                                                      ),
+                                                      color: Colors.blueGrey,
+                                                      // image: DecorationImage(
+                                                      //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.person,
+                                                      size: 175,
+                                                      color: Colors.white,
                                                     ),
                                                   ),
                                                 ),
@@ -229,91 +295,23 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                             ),
                                           );
                                         },
-                                        child: updatedUserDoc['company_logo'] != null &&
-                                                updatedUserDoc['company_logo'] != ""
-                                            ? Container(
-                                                width: 100,
-                                                height: 100,
-                                                child: ClipOval(
-                                                  clipBehavior: Clip.hardEdge,
-                                                  child: Image.network(
-                                                    updatedUserDoc['company_logo'] ?? "",
-                                                    fit: BoxFit.cover,
-                                                    loadingBuilder: (BuildContext context, Widget child,
-                                                        ImageChunkEvent? loadingProgress) {
-                                                      if (loadingProgress == null) {
-                                                        // If the image has been loaded, show the image
-                                                        return child;
-                                                      } else {
-                                                        // While loading, show the CircularProgressIndicator
-                                                        return Center(
-                                                          child: CircularProgressIndicator(
-                                                            value: loadingProgress.expectedTotalBytes != null
-                                                                ? loadingProgress.cumulativeBytesLoaded /
-                                                                    (loadingProgress.expectedTotalBytes ?? 1)
-                                                                : null,
-                                                          ),
-                                                        );
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                              )
-                                            : Icon(
-                                                Icons.person,
-                                                color: Colors.white,
-                                                size: 30,
-                                              ),
-                                      ),
-                                    )
-                                  : GestureDetector(
-                                      onTap: () async {
-                                        await showDialog(
-                                          context: context,
-                                          builder: (_) => Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 50, right: 50),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                child: Container(
-                                                  width: double.infinity,
-                                                  height: 250,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: Colors.blueGrey,
-                                                    // image: DecorationImage(
-                                                    //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
-                                                  ),
-                                                  child: Icon(
-                                                    Icons.person,
-                                                    size: 175,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
+                                        child: CircleAvatar(
+                                          radius: 30,
+                                          // backgroundImage: NetworkImage(
+                                          //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
+                                          backgroundColor: Colors.blueGrey,
+                                          child: Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            size: 30,
                                           ),
-                                        );
-                                      },
-                                      child: CircleAvatar(
-                                        radius: 30,
-                                        // backgroundImage: NetworkImage(
-                                        //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
-                                        backgroundColor: Colors.blueGrey,
-                                        child: Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                          size: 30,
                                         ),
                                       ),
-                                    ),
-                              */
+                                */
                               Obx(
                                 () => (controller.finalImageUrl.value != "")
                                     ? CircleAvatar(
-                                        radius: 30,
+                                        radius: 40,
                                         backgroundColor: Colors.transparent,
                                         child: GestureDetector(
                                           onTap: () async {
@@ -411,14 +409,14 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                           );
                                         },
                                         child: CircleAvatar(
-                                          radius: 30,
+                                          radius: 40,
                                           // backgroundImage: NetworkImage(
                                           //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
                                           backgroundColor: Colors.blueGrey,
                                           child: Icon(
                                             Icons.person,
                                             color: Colors.white,
-                                            size: 30,
+                                            size: 40,
                                           ),
                                         ),
                                       ),
@@ -426,44 +424,59 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                               SizedBox(
                                 width: 15,
                               ),
-                              const Text(
-                                'Admin Panel',
-                                // textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Inter',
-                                ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    updatedUserDoc['username'],
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                  Text(
+                                    "(Admin)",
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      launchEmail(updatedUserDoc['email']);
+                                    },
+                                    child: Text(
+                                      updatedUserDoc['email'], // Assuming 'email' field exists in userDoc
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400,
+                                        fontFamily: 'Inter',
+                                        height: 1.21,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              // const Text(
+                              //   'Admin Panel',
+                              //   // textAlign: TextAlign.center,
+                              //   style: TextStyle(
+                              //     color: Colors.black,
+                              //     fontSize: 20,
+                              //     fontWeight: FontWeight.bold,
+                              //     fontFamily: 'Inter',
+                              //   ),
+                              // ),
                             ],
                           ),
-                          Spacer(),
+                          // Spacer(),
                           // const SizedBox(height: 10),
-                          Text(
-                            updatedUserDoc['username'], // Assuming 'username' field exists in userDoc
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Inter',
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              launchEmail(updatedUserDoc['email']);
-                            },
-                            child: Text(
-                              updatedUserDoc['email'], // Assuming 'email' field exists in userDoc
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Inter',
-                                height: 1.21,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -472,6 +485,44 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                       physics: NeverScrollableScrollPhysics(),
                       padding: EdgeInsets.zero,
                       children: [
+                        Card(
+                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          color: Colors.white,
+                          child: ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            tileColor: Colors.white,
+                            leading: Icon(
+                              CupertinoIcons.settings,
+                              // ignore: deprecated_member_use
+                              color: themecolor.withOpacity(0.65),
+                            ),
+                            title: const Text('App Settings',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.bold,
+                                )),
+                            subtitle: Text("Manage your app with more settings."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AppSettingsScreen(adminId: widget.adminId),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                         Card(
                           margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                           shape: RoundedRectangleBorder(
@@ -496,6 +547,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   fontWeight: FontWeight.bold,
                                 )),
                             subtitle: Text("Edit your personal details."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () async {
                               // Navigator.push(
                               //   context,
@@ -541,6 +596,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   fontWeight: FontWeight.bold,
                                 )),
                             subtitle: Text("Change your current password."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () {
                               // Navigator.of(context).pop();
                               Navigator.push(
@@ -552,40 +611,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             },
                           ),
                         ),
-                        Card(
-                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          color: Colors.white,
-                          child: ListTile(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            tileColor: Colors.white,
-                            leading: Icon(
-                              CupertinoIcons.settings,
-                              // ignore: deprecated_member_use
-                              color: themecolor.withOpacity(0.65),
-                            ),
-                            title: const Text('App Settings',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            subtitle: Text("Manage your app with more settings."),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AppSettingsScreen(adminId: widget.adminId),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+
                         /*
                         Card(
                           margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
@@ -879,7 +905,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 fontFamily: 'Inter',
                               ),
                             ),
-                            subtitle: Text("About our company."),
+                            subtitle: Text("About the application."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () {
                               /*showDialog(
                                 context: context,
@@ -1028,7 +1058,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text("Share our app."),
+                            subtitle: Text("Rate this application."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () async {
                               // LaunchReview.launch(androidAppId: "com.example.gym_app");
                               // launch("https://www.playstore.com");
@@ -1067,6 +1101,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                               ),
                             ),
                             subtitle: Text("Communication details."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () {
                               showDialog(
                                 context: context,
@@ -1223,7 +1261,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text("Rate our app."),
+                            subtitle: Text("Share this application."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () async {
                               String storeLink = 'https://play.google.com/store/apps/details?id=gnhub.expense.tracker';
 
@@ -1269,6 +1311,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   fontWeight: FontWeight.bold,
                                 )),
                             subtitle: Text("Sign out from this account."),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right,
+                              color: Colors.grey.shade500,
+                            ),
                             onTap: () {
                               // Navigator.of(context).pop();
                               showDialog(
@@ -1463,10 +1509,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                   );
                                 },
                               );*/
-                              // showDeleteAdminDialog(
-                              //     context, widget.adminId, SharedPref.get(prefKey: PrefKey.adminEmail) ?? "");
-                              showDeleteConfirmationDialog(
+                              showDeleteAdminDialog(
                                   context, widget.adminId, SharedPref.get(prefKey: PrefKey.adminEmail) ?? "");
+                              // showDeleteConfirmationDialog(
+                              //     context, widget.adminId, SharedPref.get(prefKey: PrefKey.adminEmail) ?? "");
                             },
                           ),
                         ),
@@ -1572,10 +1618,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: Text('⚠️ Confirm Deletion'),
+          title: Text('⚠️ Delete Account'),
           content: Text(
             "Warning! Deleting this admin will remove all expense data and all employees associated with this admin. "
-            "This action is irreversible. Are you absolutely sure you want to proceed?",
+            "This action is irreversible.\n\nAre you absolutely sure you want to proceed?",
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
           ),
           actions: [
@@ -1618,6 +1664,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(topLeft: Radius.circular(27), topRight: Radius.circular(27)),
+                // ignore: deprecated_member_use
                 color: Colors.red.withOpacity(0.1),
               ),
               child: Row(
@@ -1625,7 +1672,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Delete this Admin?',
+                    'Delete this Account?',
+                    // ignore: deprecated_member_use
                     textScaleFactor: 0.8,
                     style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
                   ),
@@ -1652,10 +1700,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                   margin: EdgeInsets.zero,
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
                     color: Colors.red.withOpacity(0.1),
                   ),
                   child: Text(
-                    "Doing so will permanently delete all associated data, including employees and expenses.",
+                    "Doing so will permanently delete all associated data.",
                     style: TextStyle(fontWeight: FontWeight.w600),
                     textAlign: TextAlign.start,
                   ),
@@ -1676,7 +1725,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: "Confirm that you want to delete this collection by typing its ID: ",
+                                    text: "Confirm that you want to delete this Account by typing: ",
                                     style: TextStyle(fontWeight: FontWeight.w400),
                                   ),
                                   TextSpan(
@@ -1709,6 +1758,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                             hintText: "Type \"DELETE\"",
                             // labelText: "",
                             labelStyle:
+                                // ignore: deprecated_member_use
                                 TextStyle(color: dialogFocusNode.hasFocus ? themecolor : Colors.grey.withOpacity(0.95)),
                             // ignore: deprecated_member_use
                             hintStyle: TextStyle(color: Colors.grey.withOpacity(0.95)),
@@ -1843,21 +1893,21 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         return AlertDialog(
           title: Text('🚨 Final Confirmation'),
           content: Text(
-            "This is your last chance! Deleting this admin will PERMANENTLY erase all associated expenses, users, and data. "
+            "This is your last chance!\n\nDeleting this Account will PERMANENTLY erase all associated expenses, users, and data. "
             "This action cannot be undone.\n\nAre you sure you want to continue?",
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('No, Keep Admin', style: TextStyle(color: Colors.green)),
+              child: Text('No, Keep this Account', style: TextStyle(color: Colors.green)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
                 deleteAdmin(adminId, adminEmail); // Call delete function
               },
-              child: Text('Yes, Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              child: Text('Yes, Confirm Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
           ],
         );

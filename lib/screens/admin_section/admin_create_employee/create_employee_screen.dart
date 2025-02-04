@@ -4,7 +4,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import '../../../const/const.dart';
 import '../../../getx_controller/load_excel_controller.dart';
-import 'dart:math';
 
 //ignore: must_be_immutable
 class AddEmployeeScreen extends StatefulWidget {
@@ -108,7 +107,93 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     }
   }
 
-  Future<void> _submitForm(BuildContext context, {DocumentSnapshot? userDoc}) async {
+  /*
+  Future<void> _submitForm(BuildContext context, /*{DocumentSnapshot? userDoc}*/) async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+
+      try {
+        if (widget.userDoc == null) {
+          final emailQuery = await FirebaseFirestore.instance
+              .collection('Users')
+              .where('email', isEqualTo: _emailController.text)
+              .get();
+
+          if (emailQuery.docs.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Email is already registered, please use a different one.')),
+            );
+
+            setState(() {
+              alreadyRegistered = true;
+              isLoading = false;
+            });
+
+            _formKey.currentState!.validate();
+            return;
+          }
+
+          await FirebaseFirestore.instance.collection('Users').add({
+            'adminId': widget.adminId,
+            'username': _usernameController.text,
+            'mobile': _mobileController.text,
+            'email': _emailController.text,
+            'password': _passwordController.text,
+            'isActive': _isActive,
+            'pin': "",
+            'isSwitchOn': false,
+            'employee_logo': '',
+          });
+        } else {
+          // Update existing user (No need to check email duplication)
+          final Map<String, dynamic> userData = widget.userDoc?.data() as Map<String, dynamic>;
+
+          if (!userData.containsKey('mobile')) {
+            await FirebaseFirestore.instance.collection('Users').doc(widget.userDoc?.id).update({
+              'mobile': _mobileController.text,
+            });
+          }
+
+          await FirebaseFirestore.instance.collection('Users').doc(widget.userDoc?.id).update({
+            'username': _usernameController.text,
+            'mobile': _mobileController.text,
+            'password': _passwordController.text,
+            'isActive': _isActive,
+          });
+        }
+
+        Navigator.of(context).pop();
+
+        // Clear fields after operation
+        _usernameController.clear();
+        _mobileController.clear();
+        _emailController.clear();
+        _passwordController.clear();
+
+        setState(() {
+          isLoading = false;
+          alreadyRegistered = false;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+          alreadyRegistered = false;
+        });
+      }
+    }
+  }
+  */
+
+  Future<void> _submitForm(
+    BuildContext context,
+    /*{DocumentSnapshot? userDoc}*/
+  ) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoading = true;
@@ -119,7 +204,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         final emailQuery =
             await FirebaseFirestore.instance.collection('Users').where('email', isEqualTo: _emailController.text).get();
 
-        if (emailQuery.docs.isNotEmpty && userDoc == null) {
+        if (emailQuery.docs.isNotEmpty && widget.userDoc == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Email is already registered kindly register with new one.')),
           );
@@ -133,7 +218,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           return;
         }
 
-        if (userDoc == null) {
+        if (widget.userDoc == null) {
           // Add new user if no existing email is found
           await FirebaseFirestore.instance.collection('Users').add({
             'adminId': widget.adminId,
@@ -150,15 +235,15 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         } else {
           // Update existing user
 
-          final Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+          final Map<String, dynamic> userData = widget.userDoc?.data() as Map<String, dynamic>;
 
           if (!userData.containsKey('mobile')) {
-            await FirebaseFirestore.instance.collection('Users').doc(userDoc.id).update({
+            await FirebaseFirestore.instance.collection('Users').doc(widget.userDoc?.id).update({
               'mobile': _mobileController.text,
             });
           }
 
-          await FirebaseFirestore.instance.collection('Users').doc(userDoc.id).update({
+          await FirebaseFirestore.instance.collection('Users').doc(widget.userDoc?.id).update({
             'username': _usernameController.text,
             'mobile': _mobileController.text,
             'email': _emailController.text,
@@ -381,8 +466,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                       if (value!.isEmpty) {
                         return 'Enter your email';
                       }
+                      value = value.trim();
                       if (value != value.toLowerCase()) {
                         return 'Email must be in lowercase';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Enter a valid email';
                       }
                       if (alreadyRegistered) {
                         return 'Email is already registered';

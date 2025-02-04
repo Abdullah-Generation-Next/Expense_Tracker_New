@@ -1,6 +1,5 @@
 import 'package:android_play_install_referrer/android_play_install_referrer.dart';
 import 'package:etmm/services/shared_pref.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart';
@@ -14,9 +13,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await FirebaseAppCheck.instance.activate(
-      // webRecaptchaSiteKey: 'YOUR_RECAPTCHA_SITE_KEY', // Only needed for web
-      );
+  // await FirebaseAppCheck.instance.activate(
+  //     // webRecaptchaSiteKey: 'YOUR_RECAPTCHA_SITE_KEY', // Only needed for web
+  //     );
 
   runApp(MyApp());
 }

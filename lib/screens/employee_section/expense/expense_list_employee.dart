@@ -1,5 +1,4 @@
 import 'dart:io';
-// import 'dart:typed_data';
 import 'package:etmm/const/const.dart';
 import 'package:etmm/screens/employee_section/expense/add_expense_employee.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -965,9 +964,62 @@ class _ExpenseListEmployeeState extends State<ExpenseListEmployee> {
                       'Category:',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text('${data['category']}'),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    // Spacer(),
+                    Expanded(
+                        child: Text(
+                      data['category']
+                      // "Hello world how are you is every thing all right i cant find you "
+                      ,
+                      softWrap: true,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                    )),
                   ],
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Payment Mode:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(data['payment_mode']),
+                  ],
+                ),
+                if (data.containsKey('siteAddress') && data['siteAddress']?.isNotEmpty)
+                  Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Address:',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          // Spacer(),
+                          Expanded(
+                              child: Text(
+                            data['siteAddress']
+                            // "Hello world how are you is every thing all right i cant find you "
+                            ,
+                            softWrap: true,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                          )),
+                        ],
+                      ),
+                    ],
+                  ),
                 if (data['remark']?.isNotEmpty ?? false)
                   Column(
                     children: [

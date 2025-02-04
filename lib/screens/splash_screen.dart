@@ -51,7 +51,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (querySnapshot.docs.isNotEmpty) {
       DocumentSnapshot userDoc = querySnapshot.docs.first;
 
-      await constants.loadAdminFromFirestore(userDoc.id).then((value) {
+      await constants.loadAdminFromFirestore(userDoc.id).then((value) async {
+        // await constants.ensureEmpDefaultFields(userDoc.id);
         print("SiteLable: ${loadController.siteLable.value}");
 
         if (userDoc['email'] == SharedPref.get(prefKey: PrefKey.adminEmail)) {
@@ -113,7 +114,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (querySnapshot.docs.isNotEmpty) {
       DocumentSnapshot userDoc = querySnapshot.docs.first;
 
-      await constants.loadAdminFromFirestore(userDoc['adminId']).then((value) {
+      await constants.loadAdminFromFirestore(userDoc['adminId']).then((value) async {
+        await constants.ensureEmpDefaultFields(userDoc.id);
         print("SiteLable: ${loadController.siteLable.value}");
 
         if (userDoc['email'] == SharedPref.get(prefKey: PrefKey.empEmail)) {

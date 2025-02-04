@@ -37,6 +37,7 @@ class _EmployeeRootScreenState extends State<EmployeeRootScreen> {
     super.initState();
     activeTab = widget.initialIndex;
     constants.loadUserData(widget.userId);
+    // constants.ensureEmpDefaultFields(widget.userId);
   }
 
   void _onItemTapped(int index) {

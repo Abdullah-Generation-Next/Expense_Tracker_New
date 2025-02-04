@@ -12,7 +12,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import '../../../getx_controller/load_excel_controller.dart';
-import 'dart:math';
 
 enum TransactionType { credit, debit }
 
@@ -228,10 +227,11 @@ class _AddAdminExpenseState extends State<AddAdminExpense> {
           'time': time,
           'remark': remark,
           'category': category,
-          'transactionType': _transactionType == TransactionType.credit ? 'credit' : 'debit',
+          'transactionType': _transactionType == TransactionType.credit ? 'Credit' : 'Debit',
           'payment_mode': payment.isNotEmpty ? payment : '', // Include payment_mode field
           'createdAt': FieldValue.serverTimestamp(),
           'imageUrl': finalImageUrl,
+          'siteAddress': loadController.fullAdminAddress.value,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -258,10 +258,11 @@ class _AddAdminExpenseState extends State<AddAdminExpense> {
           'time': time,
           'remark': remark,
           'category': category,
-          'transactionType': _transactionType == TransactionType.credit ? 'credit' : 'debit',
+          'transactionType': _transactionType == TransactionType.credit ? 'Credit' : 'Debit',
           'payment_mode': payment.isNotEmpty ? payment : '', // Update payment_mode
           'updatedAt': FieldValue.serverTimestamp(),
           'imageUrl': finalImageUrl,
+          'siteAddress': loadController.fullAdminAddress.value,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -281,7 +282,7 @@ class _AddAdminExpenseState extends State<AddAdminExpense> {
       setState(() {
         _selectedCategory = null;
         _selectedPayment = null; // Reset payment dropdown
-        _transactionType = TransactionType.credit;
+        // _transactionType = TransactionType.credit;
         _image = null;
       });
 
@@ -600,7 +601,9 @@ class _AddAdminExpenseState extends State<AddAdminExpense> {
       // _selectedPayment = constants.categoryLists.contains(loadedPaymentMode) ? loadedPaymentMode : null;
 
       _transactionType =
-          widget.documentData?['transactionType'] == 'Credit' ? TransactionType.credit : TransactionType.debit;
+          (widget.documentData?['transactionType'] == 'credit' || widget.documentData?['transactionType'] == 'Credit')
+              ? TransactionType.credit
+              : TransactionType.debit;
       databaseImage = widget.documentData?["imageUrl"];
       print(databaseImage);
     }
@@ -664,471 +667,614 @@ class _AddAdminExpenseState extends State<AddAdminExpense> {
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _titleController,
-                  textCapitalization: TextCapitalization.words,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.next,
-                  focusNode: titleFocusNode,
-                  onFieldSubmitted: (_) {
-                    FocusScope.of(context).requestFocus(amountFocusNode);
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    prefixIcon: Icon(Icons.title),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a title';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
-                Row(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _amountController,
-                        textInputAction: TextInputAction.next,
-                        focusNode: amountFocusNode,
-                        onFieldSubmitted: (_) {
-                          FocusScope.of(context).requestFocus(remarkFocusNode);
-                        },
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Amount',
-                          prefixIcon: Icon(Icons.currency_rupee),
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an amount';
-                          } else if (value.length > 6) {
-                            return '6 digits limit';
-                          }
-                          return null;
-                        },
+                    TextFormField(
+                      controller: _titleController,
+                      textCapitalization: TextCapitalization.words,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.next,
+                      focusNode: titleFocusNode,
+                      onFieldSubmitted: (_) {
+                        FocusScope.of(context).requestFocus(amountFocusNode);
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        prefixIcon: Icon(Icons.title),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a title';
+                        }
+                        return null;
+                      },
                     ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: DropdownButtonFormField<TransactionType>(
-                        value: _transactionType,
-                        items: [
-                          DropdownMenuItem(
-                            value: TransactionType.credit,
-                            child: Text('Credit'),
-                          ),
-                          DropdownMenuItem(
-                            value: TransactionType.debit,
-                            child: Text('Debit'),
-                          ),
-                        ],
-                        onChanged: (newValue) {
-                          setState(() {
-                            _transactionType = newValue!;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Type',
-                          prefixIcon: Icon(Icons.credit_card),
-                        ),
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select a transaction type';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Obx(() => TextFormField(
-                            controller: _dateController,
-                            readOnly: true,
-                            onTap:
-                                // SharedPref.get(prefKey: PrefKey.defaultDatePickAdmin) == "0"
-                                //     ? null
-                                //     :
-                                loadController.allowDateToChange.value == "No"
-                                    ? null
-                                    : () async {
-                                        final DateTime? pickedDate = await showDatePicker(
-                                          context: context,
-                                          initialDate: DateTime.now(),
-                                          firstDate: DateTime(2000),
-                                          lastDate: DateTime(2101),
-                                        );
-                                        if (pickedDate != null) {
-                                          _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-                                        }
-                                      },
+                    const SizedBox(height: 16.0),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _amountController,
+                            textInputAction: TextInputAction.next,
+                            focusNode: amountFocusNode,
+                            onFieldSubmitted: (_) {
+                              FocusScope.of(context).requestFocus(remarkFocusNode);
+                            },
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Amount',
+                              prefixIcon: Icon(Icons.currency_rupee),
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please select a Date';
+                                return 'Please enter an amount';
+                              } else if (value.length > 6) {
+                                return '6 digits limit';
                               }
                               return null;
                             },
-                            decoration: const InputDecoration(
-                              labelText: 'Date',
-                              prefixIcon: Icon(Icons.calendar_today),
-                            ),
-                          )),
-                    ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: Obx(
-                        () => TextFormField(
-                          controller: _timeController,
-                          readOnly: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Time',
-                            prefixIcon: Icon(Icons.access_time),
                           ),
-                          onTap: loadController.allowDateToChange.value == "No"
-                              ? null
-                              : () async {
-                                  TimeOfDay? pickedTime = await showTimePicker(
-                                    context: context,
-                                    initialTime: TimeOfDay.now(),
-                                  );
-                                  if (pickedTime != null) {
-                                    _timeController.text = pickedTime.format(context);
+                        ),
+                        const SizedBox(width: 16.0),
+                        Expanded(
+                          child: DropdownButtonFormField<TransactionType>(
+                            value: _transactionType,
+                            items: [
+                              DropdownMenuItem(
+                                value: TransactionType.credit,
+                                child: Text('Credit'),
+                              ),
+                              DropdownMenuItem(
+                                value: TransactionType.debit,
+                                child: Text('Debit'),
+                              ),
+                            ],
+                            onChanged: (newValue) {
+                              setState(() {
+                                _transactionType = newValue!;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              labelText: 'Type',
+                              prefixIcon: Icon(Icons.credit_card),
+                            ),
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Please select a transaction type';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Obx(() => TextFormField(
+                                controller: _dateController,
+                                readOnly: true,
+                                onTap:
+                                    // SharedPref.get(prefKey: PrefKey.defaultDatePickAdmin) == "0"
+                                    //     ? null
+                                    //     :
+                                    loadController.allowDateToChange.value == "No"
+                                        ? null
+                                        : () async {
+                                            final DateTime? pickedDate = await showDatePicker(
+                                              context: context,
+                                              initialDate: DateTime.now(),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime(2101),
+                                            );
+                                            if (pickedDate != null) {
+                                              _dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                            }
+                                          },
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please select a Date';
                                   }
+                                  return null;
                                 },
+                                decoration: const InputDecoration(
+                                  labelText: 'Date',
+                                  prefixIcon: Icon(Icons.calendar_today),
+                                ),
+                              )),
+                        ),
+                        const SizedBox(width: 16.0),
+                        Expanded(
+                          child: Obx(
+                            () => TextFormField(
+                              controller: _timeController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Time',
+                                prefixIcon: Icon(Icons.access_time),
+                              ),
+                              onTap: loadController.allowDateToChange.value == "No"
+                                  ? null
+                                  : () async {
+                                      TimeOfDay? pickedTime = await showTimePicker(
+                                        context: context,
+                                        initialTime: TimeOfDay.now(),
+                                      );
+                                      if (pickedTime != null) {
+                                        _timeController.text = pickedTime.format(context);
+                                      }
+                                    },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a time';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                    Obx(
+                      () => DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          // items: _categories.map((String category) {
+                          //   return DropdownMenuItem<String>(
+                          //     value: category,
+                          //     child: Text(category),
+                          //   );
+                          // }).toList(),
+                          items: loadController.categoryLists.map((String category) {
+                            return DropdownMenuItem<String>(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedCategory = newValue;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            labelText: 'Category',
+                            prefixIcon: Icon(Icons.category),
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please select a time';
+                              return 'Please select a category';
                             }
                             return null;
-                          },
-                        ),
-                      ),
+                          }),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Obx(
-                  () => DropdownButtonFormField<String>(
-                      value: _selectedCategory,
-                      // items: _categories.map((String category) {
+                    const SizedBox(height: 16.0),
+                    DropdownButtonFormField<String>(
+                      value: _selectedPayment,
+                      // items: _payment.map((String payment) {
                       //   return DropdownMenuItem<String>(
-                      //     value: category,
-                      //     child: Text(category),
+                      //     value: payment,
+                      //     child: Text(payment),
                       //   );
                       // }).toList(),
-                      items: loadController.categoryLists.map((String category) {
+                      items: constants.paymentModeLists.map((String payment) {
                         return DropdownMenuItem<String>(
-                          value: category,
-                          child: Text(category),
+                          value: payment,
+                          child: Text(payment),
                         );
                       }).toList(),
                       onChanged: (newValue) {
                         setState(() {
-                          _selectedCategory = newValue;
+                          _selectedPayment = newValue;
                         });
                       },
                       decoration: const InputDecoration(
-                        labelText: 'Category',
-                        prefixIcon: Icon(Icons.category),
+                        labelText: 'Payment Mode',
+                        prefixIcon: Icon(CupertinoIcons.money_dollar_circle),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select a category';
+                          return 'Please select a payment mode';
                         }
                         return null;
-                      }),
-                ),
-                const SizedBox(height: 16.0),
-                DropdownButtonFormField<String>(
-                  value: _selectedPayment,
-                  // items: _payment.map((String payment) {
-                  //   return DropdownMenuItem<String>(
-                  //     value: payment,
-                  //     child: Text(payment),
-                  //   );
-                  // }).toList(),
-                  items: constants.paymentModeLists.map((String payment) {
-                    return DropdownMenuItem<String>(
-                      value: payment,
-                      child: Text(payment),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedPayment = newValue;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Payment Mode',
-                    prefixIcon: Icon(CupertinoIcons.money_dollar_circle),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a payment mode';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
-                TextFormField(
-                  controller: _remarkController,
-                  textCapitalization: TextCapitalization.words,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.done,
-                  focusNode: remarkFocusNode,
-                  decoration: const InputDecoration(
-                    labelText: 'Remark',
-                    prefixIcon: Icon(Icons.note),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                // UploadScreen(),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Add Bill Photo : \n(Optional)",
-                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w400, fontSize: 15),
-                          ),
-                          // SizedBox(width: 10,),
-                          /*Center(
-                            child: InkWell(
-                              highlightColor: Colors.transparent,
-                              splashColor: Colors.transparent,
-                              onTap: () {
-                                getImageGallery();
-                              },
-                              child: _image != null
-                                  ? Container(
-                                height: 100,
-                                width: 100,
-                                child: Image.file(
-                                  _image!.absolute,
-                                  fit: BoxFit.cover,
-                                ),
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
+                    TextFormField(
+                      controller: _remarkController,
+                      textCapitalization: TextCapitalization.words,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      focusNode: remarkFocusNode,
+                      decoration: const InputDecoration(
+                        labelText: 'Remark',
+                        prefixIcon: Icon(Icons.note),
+                      ),
+                    ),
+                    loadController.fullAdminAddress.value != ""
+                        ? Column(
+                            children: [
+                              const SizedBox(height: 25),
+                              Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.location_solid,
+                                    color: themecolor,
+                                    size: 20,
+                                  ),
+                                  SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text("Your last location was fetched is"),
+                                ],
+                              ),
+                              const SizedBox(height: 15),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
                                 decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.black)),
-                              )
-                                  : widget.DocumentData != null ? Container(
-                                height: 100,
-                                width: 100,
-                                child: Image.network(
-                                  widget.DocumentData?["imageUrl"],
-                                  fit: BoxFit.cover,
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(color: Colors.black),
+                                  color: Colors.transparent,
                                 ),
-                                decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.black)),
-                              ) : Center(
-                                child: Container(
-                                  height: 100,
-                                  width: 100,
-                                  child: Center(child: Icon(Icons.photo)),
-                                  decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.black)),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                        child: Obx(() => Text(
+                                              "${loadController.fullAdminAddress.value != "" ? loadController.fullAdminAddress : "You haven't updated your location yet!"}",
+                                              style: TextStyle(color: Colors.black),
+                                            ))),
+                                    CupertinoButton(
+                                      padding: EdgeInsets.zero,
+                                      onPressed: () {
+                                        if (loadController.fullAdminAddress.value == "") {
+                                          loadController.requestLocationPermission(
+                                              isAdmin: true, adminId: widget.adminId);
+                                        } else {
+                                          showUpdateLocationDialog(context);
+                                        }
+                                      },
+                                      child: Tooltip(
+                                        message: "Update Current Location",
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                        ),
+                                        textStyle: TextStyle(color: Colors.black),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: Colors.transparent),
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+                                          child: Text(
+                                            'Update',
+                                            style: TextStyle(
+                                              color: themecolor,
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ),*/
-                          Center(
-                            child: InkWell(
-                              highlightColor: Colors.transparent,
-                              splashColor: Colors.transparent,
-                              onTap: () {
-                                getImageGallery();
-                              },
-                              child: _image != null
-                                  ? Stack(
-                                      children: [
-                                        Container(
-                                          height: 100,
-                                          width: 100,
-                                          decoration: BoxDecoration(border: Border.all(color: Colors.black)),
-                                          child: Image.file(
-                                            _image!,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                        Positioned(
-                                            right: 0,
-                                            child: GestureDetector(
-                                                onTap: () {
-                                                  setState(() {
-                                                    _image = null;
-                                                  });
-                                                },
-                                                child: Icon(
-                                                  Icons.cancel,
-                                                  color: Colors.red,
-                                                ))),
-                                      ],
-                                    )
-                                  : (databaseImage != null && widget.documentData?["imageUrl"] != '')
+                            ],
+                          )
+                        : SizedBox.shrink(),
+                    const SizedBox(height: 25.0),
+                    // UploadScreen(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Add Bill Photo : \n(Optional)",
+                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w400, fontSize: 15),
+                              ),
+                              // SizedBox(width: 10,),
+                              /*Center(
+                                child: InkWell(
+                                  highlightColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
+                                  onTap: () {
+                                    getImageGallery();
+                                  },
+                                  child: _image != null
                                       ? Container(
-                                          height: 100,
-                                          width: 100,
-                                          decoration: BoxDecoration(border: Border.all(color: Colors.black)),
-                                          child: Image.network(
-                                            databaseImage ?? "",
-                                            fit: BoxFit.cover,
-                                            loadingBuilder:
-                                                (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                                              if (loadingProgress == null) {
-                                                return child;
-                                              } else {
-                                                return Center(
-                                                  child: CircularProgressIndicator(
-                                                    value: loadingProgress.expectedTotalBytes != null
-                                                        ? loadingProgress.cumulativeBytesLoaded /
-                                                            (loadingProgress.expectedTotalBytes ?? 1)
-                                                        : null,
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
+                                    height: 100,
+                                    width: 100,
+                                    child: Image.file(
+                                      _image!.absolute,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.black)),
+                                  )
+                                      : widget.DocumentData != null ? Container(
+                                    height: 100,
+                                    width: 100,
+                                    child: Image.network(
+                                      widget.DocumentData?["imageUrl"],
+                                      fit: BoxFit.cover,
+                                    ),
+                                    decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.black)),
+                                  ) : Center(
+                                    child: Container(
+                                      height: 100,
+                                      width: 100,
+                                      child: Center(child: Icon(Icons.photo)),
+                                      decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.black)),
+                                    ),
+                                  ),
+                                ),
+                              ),*/
+                              Center(
+                                child: InkWell(
+                                  highlightColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
+                                  onTap: () {
+                                    getImageGallery();
+                                  },
+                                  child: _image != null
+                                      ? Stack(
+                                          children: [
+                                            Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+                                              child: Image.file(
+                                                _image!,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                            Positioned(
+                                                right: 0,
+                                                child: GestureDetector(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        _image = null;
+                                                      });
+                                                    },
+                                                    child: Icon(
+                                                      Icons.cancel,
+                                                      color: Colors.red,
+                                                    ))),
+                                          ],
                                         )
-                                      : Container(
-                                          height: 100,
-                                          width: 100,
-                                          decoration: BoxDecoration(border: Border.all(color: Colors.black)),
-                                          child: Center(child: Icon(Icons.photo)),
-                                        ),
-                            ),
-                          ),
-                          // SizedBox(width: 10,),
-                          /*RoundButton(
-                  title: 'Upload',
-                  loading: loading,
-                  onTap: () async {
-                    if (_image == null) {
-                      Fluttertoast.showToast(
-                          msg: "Please Select Image",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.CENTER,
-                          backgroundColor: themecolor,
-                          textColor: kwhite,
-                          fontSize: 15);
-                      return;
-                    }
+                                      : (databaseImage != null && widget.documentData?["imageUrl"] != '')
+                                          ? Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+                                              child: Image.network(
+                                                databaseImage ?? "",
+                                                fit: BoxFit.cover,
+                                                loadingBuilder: (BuildContext context, Widget child,
+                                                    ImageChunkEvent? loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
+                                                  } else {
+                                                    return Center(
+                                                      child: CircularProgressIndicator(
+                                                        value: loadingProgress.expectedTotalBytes != null
+                                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                                (loadingProgress.expectedTotalBytes ?? 1)
+                                                            : null,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            )
+                                          : Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+                                              child: Center(child: Icon(Icons.photo)),
+                                            ),
+                                ),
+                              ),
+                              // SizedBox(width: 10,),
+                              /*RoundButton(
+                      title: 'Upload',
+                      loading: loading,
+                      onTap: () async {
+                        if (_image == null) {
+                          Fluttertoast.showToast(
+                              msg: "Please Select Image",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.CENTER,
+                              backgroundColor: themecolor,
+                              textColor: kwhite,
+                              fontSize: 15);
+                          return;
+                        }
 
-                    final imageUrl = await uploadImageToFirebaseStorage();
-                    if (imageUrl.isEmpty) {
-                      setState(() {
-                        loading = false;
-                      });
-                      return;
-                    }
-                  }),*/
+                        final imageUrl = await uploadImageToFirebaseStorage();
+                        if (imageUrl.isEmpty) {
+                          setState(() {
+                            loading = false;
+                          });
+                          return;
+                        }
+                      }),*/
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                // Row(
-                //   children: [
-                //     _image == null
-                //         ? Text('No image selected.')
-                //         : Image.file(
-                //             _image!,
-                //             width: 100,
-                //             height: 100,
-                //             fit: BoxFit.cover,
-                //           ),
-                //     const SizedBox(width: 16.0),
-                //     ElevatedButton(
-                //       onPressed: () {
-                //         showModalBottomSheet(
-                //           context: context,
-                //           builder: (context) {
-                //             return Column(
-                //               mainAxisSize: MainAxisSize.min,
-                //               children: [
-                //                 ListTile(
-                //                   leading: Icon(Icons.camera),
-                //                   title: Text('Take a Photo'),
-                //                   onTap: () {
-                //                     _pickImage(ImageSource.camera);
-                //                     Navigator.of(context).pop();
-                //                   },
-                //                 ),
-                //                 ListTile(
-                //                   leading: Icon(Icons.image),
-                //                   title: Text('Choose from Gallery'),
-                //                   onTap: () {
-                //                     _pickImage(ImageSource.gallery);
-                //                     Navigator.of(context).pop();
-                //                   },
-                //                 ),
-                //               ],
-                //             );
-                //           },
-                //         );
-                //       },
-                //       child: Text('Pick Image'),
-                //     ),
-                //   ],
-                // ),
-                const SizedBox(height: 24.0),
-                Container(
-                  height: 60,
-                  child: ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : () {
-                            if (_formKey.currentState?.validate() == true) {
-                              // Perform your add or edit logic here
-                              // Navigator.of(context).pushReplacement(MaterialPageRoute(
-                              //   builder: (context) => AdminExpensePage(adminId: widget.adminId, userDoc: widget.userDoc,),
-                              // ));
-                              submitForm(context, widget);
-                              // Navigator.pop(context);
-                            }
-                          },
-                    style: ButtonStyle(
-                      // ignore: deprecated_member_use
-                      backgroundColor: MaterialStatePropertyAll(themecolor),
-                      // ignore: deprecated_member_use
-                      foregroundColor: MaterialStatePropertyAll(Colors.white),
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          )
-                        : Text(
-                            widget.documentData != null ? 'Edit' : 'Add',
-                            style: TextStyle(color: Colors.white, fontSize: 20),
-                          ),
-                  ),
+                    // Row(
+                    //   children: [
+                    //     _image == null
+                    //         ? Text('No image selected.')
+                    //         : Image.file(
+                    //             _image!,
+                    //             width: 100,
+                    //             height: 100,
+                    //             fit: BoxFit.cover,
+                    //           ),
+                    //     const SizedBox(width: 16.0),
+                    //     ElevatedButton(
+                    //       onPressed: () {
+                    //         showModalBottomSheet(
+                    //           context: context,
+                    //           builder: (context) {
+                    //             return Column(
+                    //               mainAxisSize: MainAxisSize.min,
+                    //               children: [
+                    //                 ListTile(
+                    //                   leading: Icon(Icons.camera),
+                    //                   title: Text('Take a Photo'),
+                    //                   onTap: () {
+                    //                     _pickImage(ImageSource.camera);
+                    //                     Navigator.of(context).pop();
+                    //                   },
+                    //                 ),
+                    //                 ListTile(
+                    //                   leading: Icon(Icons.image),
+                    //                   title: Text('Choose from Gallery'),
+                    //                   onTap: () {
+                    //                     _pickImage(ImageSource.gallery);
+                    //                     Navigator.of(context).pop();
+                    //                   },
+                    //                 ),
+                    //               ],
+                    //             );
+                    //           },
+                    //         );
+                    //       },
+                    //       child: Text('Pick Image'),
+                    //     ),
+                    //   ],
+                    // ),
+                    const SizedBox(height: 30.0),
+                    Container(
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState?.validate() == true) {
+                                  // Perform your add or edit logic here
+                                  // Navigator.of(context).pushReplacement(MaterialPageRoute(
+                                  //   builder: (context) => AdminExpensePage(adminId: widget.adminId, userDoc: widget.userDoc,),
+                                  // ));
+                                  submitForm(context, widget);
+                                  // Navigator.pop(context);
+                                }
+                              },
+                        style: ButtonStyle(
+                          // ignore: deprecated_member_use
+                          backgroundColor: MaterialStatePropertyAll(themecolor),
+                          // ignore: deprecated_member_use
+                          foregroundColor: MaterialStatePropertyAll(Colors.white),
+                        ),
+                        child: isLoading
+                            ? const CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              )
+                            : Text(
+                                widget.documentData != null ? 'Edit' : 'Add',
+                                style: TextStyle(color: Colors.white, fontSize: 20),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          Obx(
+            () => loadController.adminLocationLoading.isTrue
+                ? Container(
+                    alignment: Alignment.center,
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: FittedBox(
+                      fit: BoxFit.fitWidth,
+                      child: Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: Colors.grey.shade900, borderRadius: BorderRadius.circular(20)),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 4,
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              "Fetching Location",
+                              style: TextStyle(color: Colors.white, fontSize: 12, decoration: TextDecoration.none),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              "Please Wait...",
+                              style: TextStyle(color: Colors.white, fontSize: 12, decoration: TextDecoration.none),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : SizedBox.shrink(),
+          ),
+        ],
       ),
+    );
+  }
+
+  void showUpdateLocationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Update Location"),
+          content: Text("Are you sure you want to update your location?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                loadController.requestLocationPermission(isAdmin: true, adminId: widget.adminId);
+              },
+              child: Text("Update"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -50,6 +50,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
     DateTime now = DateTime.now();
     selectedMonth = months[now.month];
     constants.loadUserData(widget.userId);
+    constants.ensureEmpDefaultFields(widget.userId);
   }
 
   final List<String> months = [

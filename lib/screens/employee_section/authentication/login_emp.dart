@@ -72,7 +72,8 @@ class _EmployeeLoginPageState extends State<EmployeeLoginPage> {
               print(SharedPref.get(prefKey: PrefKey.empPassword));
               print(updatedUserDoc);
 
-              await constants.loadAdminFromFirestore(updatedUserDoc['adminId']).then((value) {
+              await constants.loadAdminFromFirestore(updatedUserDoc['adminId']).then((value) async {
+                await constants.ensureEmpDefaultFields(updatedUserDoc.id);
                 if (updatedUserDoc['pin'] == null || updatedUserDoc['pin'] == "") {
                   Navigator.pushReplacement(
                     context,

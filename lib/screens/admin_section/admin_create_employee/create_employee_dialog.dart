@@ -61,6 +61,7 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
   void initState() {
     super.initState();
     _fetchCurrentUserStatus();
+    loadController.fetchUserCount(widget.adminId);
   }
 
   Future<void> _fetchCurrentUserStatus() async {
@@ -571,7 +572,7 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
       appBar: AppBar(
         backgroundColor: themecolor,
         title: Obx(() => Text(
-              '${loadController.siteLable.value}',
+              '${loadController.siteLable.value} (${loadController.userCount.value})',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Inter', color: kwhite
                   // backgroundColor: Color(0xff0393f4),
                   ),
@@ -582,6 +583,7 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
               // _showAddEditDialog(context);
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => AddEmployeeScreen(adminId: widget.adminId)));
+              loadController.fetchUserCount(widget.adminId);
             },
             icon: Icon(Icons.person_add_alt_1),
           ),
@@ -606,13 +608,21 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
                 ),
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
+                  /*stream: FirebaseFirestore.instance
                       .collection('Users')
                       .where(
                         'adminId',
                         isEqualTo: widget.adminId,
                       )
                       .orderBy(FieldPath.documentId, descending: true)
+                      .snapshots(),*/
+                  stream: FirebaseFirestore.instance
+                      .collection('Users')
+                      .where('adminId', isEqualTo: widget.adminId)
+                      // .where('isActive', isEqualTo: true)
+                      // .orderBy('username', descending: true)
+                      .orderBy('isActive', descending: true)
+                      .orderBy('username', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
                     // if (!snapshot.hasData) {
@@ -643,7 +653,121 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
                       );
                     }
 
+                    List<DocumentSnapshot> sortedDocs = snapshot.data!.docs;
+
+                    sortedDocs.sort((a, b) {
+                      bool isActiveA = a['isActive'] ?? false;
+                      bool isActiveB = b['isActive'] ?? false;
+
+                      String usernameA = a['username']?.toString() ?? '';
+                      String usernameB = b['username']?.toString() ?? '';
+
+                      // Sort by Active first
+                      if (isActiveA != isActiveB) {
+                        return isActiveB ? 1 : -1; // Keep Active users first
+                      }
+
+                      // Sort by Username (A → Z)
+                      return usernameA.compareTo(usernameB);
+                    });
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      loadController.userCount.value = snapshot.data!.docs.length;
+                    });
+
                     return ListView.builder(
+                        itemCount: sortedDocs.length,
+                        itemBuilder: (context, index) {
+                          DocumentSnapshot userDoc = sortedDocs[index];
+
+                          _checkAndUpdateEmployeeDoc(userDoc.id);
+
+                          return Card(
+                            color: kwhite,
+                            elevation: 3,
+                            margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ListTile(
+                              tileColor: kwhite,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              title: Text(
+                                "${userDoc.data().toString().contains('username') ? userDoc['username'] : 'No username'}",
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(userDoc.data().toString().contains('email') ? userDoc['email'] : 'No email'),
+                                  SizedBox(height: 8),
+                                  Container(
+                                    padding: EdgeInsets.all(4.0),
+                                    decoration: BoxDecoration(
+                                      color: userDoc.data().toString().contains('isActive')
+                                          ? userDoc['isActive']
+                                              ? Colors.green[700]
+                                              : Colors.red[700]
+                                          : Colors.grey,
+                                      borderRadius: BorderRadius.circular(4.0),
+                                    ),
+                                    child: Text(
+                                      userDoc.data().toString().contains('isActive')
+                                          ? userDoc['isActive']
+                                              ? 'Active'
+                                              : 'Inactive'
+                                          : 'No status',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit, color: Colors.grey),
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AddEmployeeScreen(userDoc: userDoc, adminId: widget.adminId)));
+                                      loadController.fetchUserCount(widget.adminId);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.grey),
+                                    onPressed: () {
+                                      String username = userDoc.data().toString().contains('username')
+                                          ? userDoc['username']
+                                          : 'Employee name not found';
+                                      _showDeleteConfirmationDialog(context, userDoc, username);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AdminEmployeeScreen(
+                                      userId: userDoc.id,
+                                      userDoc: userDoc,
+                                      initialIndex: 0,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        });
+
+                    /*return ListView.builder(
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) {
                         DocumentSnapshot userDoc = snapshot.data!.docs[index];
@@ -740,7 +864,7 @@ class _CreateEmployeeDialogState extends State<CreateEmployeeDialog> {
                           ),
                         );
                       },
-                    );
+                    );*/
                   },
                 ),
               ),

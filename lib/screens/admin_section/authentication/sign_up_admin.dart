@@ -82,6 +82,9 @@ class _SignupPageState extends State<SignupPage> {
             'is_auto_approve': 'Yes',
             'site_label': 'Employee',
             'show_delete_button': 'Yes',
+            'lat': '',
+            'lng': '',
+            'place': '',
           });
 
           // Save admin ID to SharedPreferences
@@ -183,6 +186,7 @@ class _SignupPageState extends State<SignupPage> {
                     if (value!.isEmpty) {
                       return 'Enter your email';
                     }
+                    value = value.trim();
                     if (value != value.toLowerCase()) {
                       return 'Email must be in lowercase';
                     }

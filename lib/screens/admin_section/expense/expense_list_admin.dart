@@ -1,5 +1,4 @@
 import 'dart:io';
-// import 'dart:typed_data';
 import 'package:etmm/const/const.dart';
 import 'package:etmm/screens/admin_section/expense/add_expense_admin.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -619,14 +618,19 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
   }
 
   void _editExpense(BuildContext context, DocumentSnapshot document) {
+    final data = document.data() as Map<String, dynamic>? ?? {};
+
     final title = document['title'];
     final amount = document['amount'].toString();
     final date = document['date'];
     final time = document['time'];
     final remark = document['remark'];
     final category = document['category'];
+    final paymentMode = document['payment_mode'];
+    final address = data.containsKey('siteAddress') ? data['siteAddress'] : null;
+    // final address = document['siteAddress'] ?? "";
     final transactionType = document['transactionType'] == 'credit' ? TransactionType.credit : TransactionType.debit;
-    final imageUrl = document['imageUrl'];
+    final imageUrl = (document['imageUrl'] != null) ? document['imageUrl'] : "";
 
     // String formattedDate = date != null && date.isNotEmpty
     //     ? DateFormat('dd-MM-yyyy').format(DateTime.parse(date))
@@ -719,7 +723,7 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'Expense ',
+                'Expense Details',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -817,9 +821,62 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
                     'Category:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text(category),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  // Spacer(),
+                  Expanded(
+                      child: Text(
+                    category
+                    // "Hello world how are you is every thing all right i cant find you "
+                    ,
+                    softWrap: true,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  )),
                 ],
               ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Payment Mode:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(paymentMode),
+                ],
+              ),
+              if (data.containsKey('siteAddress') && document['siteAddress']?.isNotEmpty)
+                Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Address:',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
+                        // Spacer(),
+                        Expanded(
+                            child: Text(
+                          address
+                          // "Hello world how are you is every thing all right i cant find you "
+                          ,
+                          softWrap: true,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                        )),
+                      ],
+                    ),
+                  ],
+                ),
               if (document['remark']?.isNotEmpty ?? false)
                 Column(
                   children: [
@@ -849,7 +906,7 @@ class _AdminExpensePageState extends State<AdminExpensePage> {
                     ),
                   ],
                 ),
-              if (document['imageUrl']?.isNotEmpty ?? false)
+              if (imageUrl != "")
                 Column(
                   children: [
                     const SizedBox(height: 8),

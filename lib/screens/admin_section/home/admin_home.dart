@@ -76,9 +76,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   void initState() {
     super.initState();
     _subscribeToFirestore();
-    // Initialize selectedMonth to the current month
     DateTime now = DateTime.now();
-    selectedMonth = months[now.month]; // Adjusting for 1-based index of months list
+    selectedMonth = months[now.month];
   }
 
   @override
@@ -1514,6 +1513,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     if (selectedMonth != 'All') {
       DateTime firstDayOfMonth = _getFirstDayOfMonth(selectedMonth);
       DateTime lastDayOfMonth = _getLastDayOfMonth(selectedMonth);
+      print(firstDayOfMonth.toIso8601String());
+      print(lastDayOfMonth.toIso8601String());
       query = query.where('date', isGreaterThanOrEqualTo: firstDayOfMonth.toIso8601String());
       query = query.where('date', isLessThanOrEqualTo: lastDayOfMonth.toIso8601String());
     }

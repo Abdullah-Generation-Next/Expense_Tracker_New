@@ -56,6 +56,15 @@ class Const {
         if (!adminData.containsKey('site_label')) {
           updates['site_label'] = "Employee";
         }
+        if (!adminData.containsKey('lat')) {
+          updates['lat'] = "";
+        }
+        if (!adminData.containsKey('lng')) {
+          updates['lng'] = "";
+        }
+        if (!adminData.containsKey('place')) {
+          updates['place'] = "";
+        }
 
         if (updates.isNotEmpty) {
           await adminRef.update(updates);
@@ -68,18 +77,27 @@ class Const {
         controller.isAutoApprove.value = adminData['is_auto_approve'] ?? "Yes";
         controller.siteLable.value = adminData['site_label'] ?? "Employee";
         controller.showDeleteButton.value = adminData['show_delete_button'] ?? "Yes";
+        controller.adminLat.value = adminData['lat'] ?? "";
+        controller.adminLng.value = adminData['lng'] ?? "";
+        controller.fullAdminAddress.value = adminData['place'] ?? "";
       } else {
         await adminRef.set({
           'show_delete_button': "Yes",
           'allow_date_to_change': "Yes",
           'is_auto_approve': "Yes",
           'site_label': "Employee",
+          'lat': "",
+          'lng': "",
+          'place': "",
         }, SetOptions(merge: true));
 
         controller.allowDateToChange.value = "Yes";
         controller.isAutoApprove.value = "Yes";
         controller.siteLable.value = "Employee";
         controller.showDeleteButton.value = "Yes";
+        controller.adminLat.value = "";
+        controller.adminLng.value = "";
+        controller.fullAdminAddress.value = "";
 
         print("Default fields created in a new document.");
       }
@@ -216,6 +234,9 @@ class Const {
         controller.isAutoApprove.value = adminData['is_auto_approve'] ?? 'Yes';
         controller.siteLable.value = adminData['site_label'] ?? 'Employee';
         controller.showDeleteButton.value = adminData['show_delete_button'] ?? 'Yes';
+        controller.adminLat.value = adminData['lat'] ?? '';
+        controller.adminLng.value = adminData['lng'] ?? '';
+        controller.fullAdminAddress.value = adminData['place'] ?? '';
       } else {
         print("Admin document does not exist");
       }
@@ -224,37 +245,106 @@ class Const {
     }
   }
 
-  /*================================================================================
+  Future<void> ensureEmpDefaultFields(String userId) async {
+    try {
+      final userRef = FirebaseFirestore.instance.collection('Users').doc(userId);
+      DocumentSnapshot userDoc = await userRef.get();
+
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        Map<String, dynamic> updates = {};
+
+        if (!userData.containsKey('lat')) {
+          updates['lat'] = "";
+        }
+        if (!userData.containsKey('lng')) {
+          updates['lng'] = "";
+        }
+        if (!userData.containsKey('place')) {
+          updates['place'] = "";
+        }
+
+        if (updates.isNotEmpty) {
+          await userRef.update(updates);
+          print("Employee default fields added/updated successfully.");
+        } else {
+          print("Employee default fields already exist.");
+        }
+
+        controller.employeeLat.value = userData['lat'] ?? "";
+        controller.employeeLng.value = userData['lng'] ?? "";
+        controller.fullEmployeeAddress.value = userData['place'] ?? "";
+      } else {
+        await userRef.set({
+          'lat': "",
+          'lng': "",
+          'place': "",
+        }, SetOptions(merge: true));
+
+        controller.employeeLat.value = "";
+        controller.employeeLng.value = "";
+        controller.fullEmployeeAddress.value = "";
+
+        print("Employee default fields created in a new document.");
+      }
+    } catch (e) {
+      print("Error ensuring employee default fields: $e");
+    }
+  }
+
+/*================================================================================
   ==================================================================================
   ================================================================================*/
 }
 
 /*
-  Delete account wala for IOS👉
-  categories replications -- specially ask sir
+  Delete account wala for IOS
   image edit profile mein nahi dala fir bhi bohot load ley che image path update hone par hi lena chahiye --
   camera and gallery nu dialog show --
-  Splash timing
   profile employee icons and logo show and search card design --
-  set pin screen init load close👉
   all profile same setup as admin
   pending background color
-  all max 100 data added in fazalcreation51 Account added👉
-  all max 100 data added in mohsin@gmail.com Account👉
-  all max 100 data added in create employees multiples👉
+  all max 100 data added in fazalcreation51 Account added
+  all max 100 data added in mohsin@gmail.com Account
+  all max 100 data added in create employees multiples
+  categories replications -- specially ask sir
+  set pin screen init load close and testing baki kabhi chalta hai kabhi nahi chalta👉
+  Splash timing👉
 
   three boxes total credit, total debit and balance separately
   General to Employee
   Divider and delete Dialog add validation type DELETE... in Account delete
   card design update to theme color
+  Location wala with adding updating while create expense also
 
-  Location wala
-  Share Wala
+  https://apps.apple.com/app/6740987927 IOS Mate karwanu baki che👉
+  category loading existing user and new user all bariikee se check baki👉
+  Share Wala👉
+  default 100+ records also not showing check that also plz👉
+
+  Add expense imageUrl problem
+  App settings inside switch
+  site orders real count (...)
+
+
+  show expense list current month only else lazyLoad sir told make filter
   open excel inside app
   check filter wise pdf and excel share creations
   Card design as spin in iCheck sir ask fields
 
   Home Page par category wise filterations
   if we are updating in expense it is not updating inside this screen CategoryExpensePage() dialog why?
-  Notifications wala
+  Notifications wala with deep linking too
+  And update doing firebase OTP wala also
+*/
+
+/* 04-02-2025
+
+  Ask sir about categories list i have given and link in IPM so which we want to eep and which not sort it please
+  category wise fix filterations inside both home pages
+  give sir apk and remaining any changes update it as fast as possible and launch in both Play Store and IOS
+  iCheck Apk update
+  make apply google backup inside Gym App
+  share referral wala baki hai
+
 */

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:get/get.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -46,6 +47,10 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
     }
   }
 
+  final constants = Const();
+
+  bool isLoading = false;
+
   @override
   void initState() {
     // setState(() {
@@ -57,6 +62,9 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
     updatedUserDoc = widget.userDoc;
     // controller.finalImageUrl.value = updatedUserDoc['employee_logo'];
     loadEmployeeCompanyLogo(widget.userId);
+    constants.ensureEmpDefaultFields(widget.userId);
+    // loadController.employeeLat.value = "";
+    // loadController.employeeLng.value = "";
     super.initState();
   }
 
@@ -88,6 +96,77 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
     loadController.updateEmployeePinStatusFromFirestore(widget.userId);
   }
 
+  void showUpdateLocationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Update Location"),
+          content: Text("Are you sure you want to update your location?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                loadController.requestLocationPermission(isAdmin: false, userId: widget.userId);
+              },
+              child: Text("Update"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> showRemoveLocationDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Disable Location Tracking?"),
+              content: Text(
+                "Are you sure you want to disable location tracking? This will remove your saved location, and expenses will no longer be tracked by location.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false), // Cancel
+                  child: Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true), // Confirm
+                  child: Text("Yes, Disable"),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+  Future<bool> showConfirmLocationDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Add Current Location"),
+            content: Text("Do you want to enable location tracking and add your current location?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Add"),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,182 +176,35 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
         backgroundColor: themecolor,
         automaticallyImplyLeading: false,
         title: Text(
-          "Profile",
+          "${loadController.siteLable.value} Profile",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Inter', color: kwhite),
         ),
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-        child: ScrollConfiguration(
-          behavior: ScrollBehavior().copyWith(overscroll: false),
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            child: Stack(
-              children: [
-                Column(
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+            child: ScrollConfiguration(
+              behavior: ScrollBehavior().copyWith(overscroll: false),
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: Stack(
                   children: [
-                    DrawerHeader(
-                      decoration: const BoxDecoration(
-                        color: Colors.transparent,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Row(
+                    Column(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.max,
                             children: [
-                              /*GestureDetector(
-                                onTap: () async {
-                                  await showDialog(
-                                    context: context,
-                                    builder: (_) => Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(left: 50, right: 50),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Container(
-                                            width: double.infinity,
-                                            height: 250,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.blueGrey,
-                                              // image: DecorationImage(
-                                              //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
-                                            ),
-                                            child: Icon(
-                                              Icons.person_outlined,
-                                              size: 175,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: CircleAvatar(
-                                  radius: 30,
-                                  // backgroundImage: NetworkImage(
-                                  //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
-                                  backgroundColor: Colors.blueGrey,
-                                  child: Icon(
-                                    Icons.person_outlined,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                ),
-                              ),*/
-                              /* Old Updated to New
-                              (updatedUserDoc['employee_logo'] != null && updatedUserDoc['employee_logo'] != "")
-                                  ?
-                                  // CircleAvatar(
-                                  //         radius: 30,
-                                  //         foregroundImage: NetworkImage(updatedUserDoc['employee_logo'] ?? ""),
-                                  //         backgroundColor: Colors.transparent,
-                                  //         child: GestureDetector(
-                                  //           onTap: () async {
-                                  //             await showDialog(
-                                  //               context: context,
-                                  //               builder: (_) => Center(
-                                  //                 child: Padding(
-                                  //                   padding: const EdgeInsets.only(left: 50, right: 50),
-                                  //                   child: GestureDetector(
-                                  //                     onTap: () {
-                                  //                       Navigator.pop(context);
-                                  //                     },
-                                  //                     child: Container(
-                                  //                       width: double.infinity,
-                                  //                       height: 250,
-                                  //                       decoration: BoxDecoration(
-                                  //                         shape: BoxShape.circle,
-                                  //                         color: Colors.transparent,
-                                  //                         image: DecorationImage(
-                                  //                             image: NetworkImage(updatedUserDoc['employee_logo'] ?? ""),
-                                  //                             fit: BoxFit.fill),
-                                  //                       ),
-                                  //                     ),
-                                  //                   ),
-                                  //                 ),
-                                  //               ),
-                                  //             );
-                                  //           },
-                                  //         ),
-                                  //       )
-                                  CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.transparent,
-                                      child: GestureDetector(
-                                        onTap: () async {
-                                          await showDialog(
-                                            context: context,
-                                            builder: (_) => Center(
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(left: 50, right: 50),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                  child: Container(
-                                                    width: double.infinity,
-                                                    height: 250,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      color: Colors.transparent,
-                                                      image: DecorationImage(
-                                                        image: NetworkImage(updatedUserDoc['employee_logo'] ?? ""),
-                                                        fit: BoxFit.fill,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        child:
-                                            updatedUserDoc['employee_logo'] != null && updatedUserDoc['employee_logo'] != ""
-                                                ? Container(
-                                                    width: 100,
-                                                    height: 100,
-                                                    child: ClipOval(
-                                                      clipBehavior: Clip.hardEdge,
-                                                      child: Image.network(
-                                                        updatedUserDoc['employee_logo'] ?? "",
-                                                        fit: BoxFit.cover,
-                                                        loadingBuilder: (BuildContext context, Widget child,
-                                                            ImageChunkEvent? loadingProgress) {
-                                                          if (loadingProgress == null) {
-                                                            // If the image has been loaded, show the image
-                                                            return child;
-                                                          } else {
-                                                            // While loading, show the CircularProgressIndicator
-                                                            return Center(
-                                                              child: CircularProgressIndicator(
-                                                                value: loadingProgress.expectedTotalBytes != null
-                                                                    ? loadingProgress.cumulativeBytesLoaded /
-                                                                        (loadingProgress.expectedTotalBytes ?? 1)
-                                                                    : null,
-                                                              ),
-                                                            );
-                                                          }
-                                                        },
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Icon(
-                                                    Icons.person,
-                                                    color: Colors.white,
-                                                    size: 30,
-                                                  ),
-                                      ),
-                                    )
-                                  : GestureDetector(
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  /*GestureDetector(
                                       onTap: () async {
                                         await showDialog(
                                           context: context,
@@ -293,7 +225,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
                                                     //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
                                                   ),
                                                   child: Icon(
-                                                    Icons.person,
+                                                    Icons.person_outlined,
                                                     size: 175,
                                                     color: Colors.white,
                                                   ),
@@ -309,849 +241,1271 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> {
                                         //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
                                         backgroundColor: Colors.blueGrey,
                                         child: Icon(
-                                          Icons.person,
+                                          Icons.person_outlined,
                                           color: Colors.white,
                                           size: 30,
                                         ),
                                       ),
-                                    ),
-                              */
-                              Obx(
-                                () => (controller.finalImageUrl.value != "")
-                                    ? CircleAvatar(
-                                        radius: 30,
-                                        backgroundColor: Colors.transparent,
-                                        child: GestureDetector(
-                                          onTap: () async {
-                                            await showDialog(
-                                              context: context,
-                                              builder: (_) => Center(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.only(left: 50, right: 50),
-                                                  child: GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.pop(context);
-                                                    },
-                                                    child: Container(
-                                                      width: double.infinity,
-                                                      height: 250,
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        color: Colors.transparent,
-                                                        image: DecorationImage(
-                                                          image: NetworkImage(controller.finalImageUrl.value),
-                                                          fit: BoxFit.fill,
+                                    ),*/
+                                  /* Old Updated to New
+                                    (updatedUserDoc['employee_logo'] != null && updatedUserDoc['employee_logo'] != "")
+                                        ?
+                                        // CircleAvatar(
+                                        //         radius: 30,
+                                        //         foregroundImage: NetworkImage(updatedUserDoc['employee_logo'] ?? ""),
+                                        //         backgroundColor: Colors.transparent,
+                                        //         child: GestureDetector(
+                                        //           onTap: () async {
+                                        //             await showDialog(
+                                        //               context: context,
+                                        //               builder: (_) => Center(
+                                        //                 child: Padding(
+                                        //                   padding: const EdgeInsets.only(left: 50, right: 50),
+                                        //                   child: GestureDetector(
+                                        //                     onTap: () {
+                                        //                       Navigator.pop(context);
+                                        //                     },
+                                        //                     child: Container(
+                                        //                       width: double.infinity,
+                                        //                       height: 250,
+                                        //                       decoration: BoxDecoration(
+                                        //                         shape: BoxShape.circle,
+                                        //                         color: Colors.transparent,
+                                        //                         image: DecorationImage(
+                                        //                             image: NetworkImage(updatedUserDoc['employee_logo'] ?? ""),
+                                        //                             fit: BoxFit.fill),
+                                        //                       ),
+                                        //                     ),
+                                        //                   ),
+                                        //                 ),
+                                        //               ),
+                                        //             );
+                                        //           },
+                                        //         ),
+                                        //       )
+                                        CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor: Colors.transparent,
+                                            child: GestureDetector(
+                                              onTap: () async {
+                                                await showDialog(
+                                                  context: context,
+                                                  builder: (_) => Center(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(left: 50, right: 50),
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          Navigator.pop(context);
+                                                        },
+                                                        child: Container(
+                                                          width: double.infinity,
+                                                          height: 250,
+                                                          decoration: BoxDecoration(
+                                                            shape: BoxShape.circle,
+                                                            color: Colors.transparent,
+                                                            image: DecorationImage(
+                                                              image: NetworkImage(updatedUserDoc['employee_logo'] ?? ""),
+                                                              fit: BoxFit.fill,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child:
+                                                  updatedUserDoc['employee_logo'] != null && updatedUserDoc['employee_logo'] != ""
+                                                      ? Container(
+                                                          width: 100,
+                                                          height: 100,
+                                                          child: ClipOval(
+                                                            clipBehavior: Clip.hardEdge,
+                                                            child: Image.network(
+                                                              updatedUserDoc['employee_logo'] ?? "",
+                                                              fit: BoxFit.cover,
+                                                              loadingBuilder: (BuildContext context, Widget child,
+                                                                  ImageChunkEvent? loadingProgress) {
+                                                                if (loadingProgress == null) {
+                                                                  // If the image has been loaded, show the image
+                                                                  return child;
+                                                                } else {
+                                                                  // While loading, show the CircularProgressIndicator
+                                                                  return Center(
+                                                                    child: CircularProgressIndicator(
+                                                                      value: loadingProgress.expectedTotalBytes != null
+                                                                          ? loadingProgress.cumulativeBytesLoaded /
+                                                                              (loadingProgress.expectedTotalBytes ?? 1)
+                                                                          : null,
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              },
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : Icon(
+                                                          Icons.person,
+                                                          color: Colors.white,
+                                                          size: 30,
+                                                        ),
+                                            ),
+                                          )
+                                        : GestureDetector(
+                                            onTap: () async {
+                                              await showDialog(
+                                                context: context,
+                                                builder: (_) => Center(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 50, right: 50),
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: Container(
+                                                        width: double.infinity,
+                                                        height: 250,
+                                                        decoration: BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: Colors.blueGrey,
+                                                          // image: DecorationImage(
+                                                          //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.person,
+                                                          size: 175,
+                                                          color: Colors.white,
                                                         ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            );
-                                          },
-                                          child: controller.finalImageUrl.value != ""
-                                              ? Container(
-                                                  width: 100,
-                                                  height: 100,
-                                                  child: ClipOval(
-                                                    clipBehavior: Clip.hardEdge,
-                                                    child: Image.network(
-                                                      controller.finalImageUrl.value,
-                                                      fit: BoxFit.cover,
-                                                      loadingBuilder: (BuildContext context, Widget child,
-                                                          ImageChunkEvent? loadingProgress) {
-                                                        if (loadingProgress == null) {
-                                                          // If the image has been loaded, show the image
-                                                          return child;
-                                                        } else {
-                                                          // While loading, show the CircularProgressIndicator
-                                                          return Center(
-                                                            child: CircularProgressIndicator(
-                                                              value: loadingProgress.expectedTotalBytes != null
-                                                                  ? loadingProgress.cumulativeBytesLoaded /
-                                                                      (loadingProgress.expectedTotalBytes ?? 1)
-                                                                  : null,
-                                                            ),
-                                                          );
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                )
-                                              : Icon(
-                                                  Icons.person,
-                                                  color: Colors.white,
-                                                  size: 30,
-                                                ),
-                                        ),
-                                      )
-                                    : GestureDetector(
-                                        onTap: () async {
-                                          await showDialog(
-                                            context: context,
-                                            builder: (_) => Center(
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(left: 50, right: 50),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                  child: Container(
-                                                    width: double.infinity,
-                                                    height: 250,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      color: Colors.blueGrey,
-                                                      // image: DecorationImage(
-                                                      //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
-                                                    ),
-                                                    child: Icon(
-                                                      Icons.person,
-                                                      size: 175,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
+                                              );
+                                            },
+                                            child: CircleAvatar(
+                                              radius: 30,
+                                              // backgroundImage: NetworkImage(
+                                              //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
+                                              backgroundColor: Colors.blueGrey,
+                                              child: Icon(
+                                                Icons.person,
+                                                color: Colors.white,
+                                                size: 30,
                                               ),
                                             ),
-                                          );
+                                          ),
+                                    */
+                                  Obx(
+                                    () => (controller.finalImageUrl.value != "")
+                                        ? CircleAvatar(
+                                            radius: 40,
+                                            backgroundColor: Colors.transparent,
+                                            child: GestureDetector(
+                                              onTap: () async {
+                                                await showDialog(
+                                                  context: context,
+                                                  builder: (_) => Center(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(left: 50, right: 50),
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          Navigator.pop(context);
+                                                        },
+                                                        child: Container(
+                                                          width: double.infinity,
+                                                          height: 250,
+                                                          decoration: BoxDecoration(
+                                                            shape: BoxShape.circle,
+                                                            color: Colors.transparent,
+                                                            image: DecorationImage(
+                                                              image: NetworkImage(controller.finalImageUrl.value),
+                                                              fit: BoxFit.fill,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: controller.finalImageUrl.value != ""
+                                                  ? Container(
+                                                      width: 100,
+                                                      height: 100,
+                                                      child: ClipOval(
+                                                        clipBehavior: Clip.hardEdge,
+                                                        child: Image.network(
+                                                          controller.finalImageUrl.value,
+                                                          fit: BoxFit.cover,
+                                                          loadingBuilder: (BuildContext context, Widget child,
+                                                              ImageChunkEvent? loadingProgress) {
+                                                            if (loadingProgress == null) {
+                                                              // If the image has been loaded, show the image
+                                                              return child;
+                                                            } else {
+                                                              // While loading, show the CircularProgressIndicator
+                                                              return Center(
+                                                                child: CircularProgressIndicator(
+                                                                  value: loadingProgress.expectedTotalBytes != null
+                                                                      ? loadingProgress.cumulativeBytesLoaded /
+                                                                          (loadingProgress.expectedTotalBytes ?? 1)
+                                                                      : null,
+                                                                ),
+                                                              );
+                                                            }
+                                                          },
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : Icon(
+                                                      Icons.person,
+                                                      color: Colors.white,
+                                                      size: 30,
+                                                    ),
+                                            ),
+                                          )
+                                        : GestureDetector(
+                                            onTap: () async {
+                                              await showDialog(
+                                                context: context,
+                                                builder: (_) => Center(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 50, right: 50),
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: Container(
+                                                        width: double.infinity,
+                                                        height: 250,
+                                                        decoration: BoxDecoration(
+                                                          shape: BoxShape.circle,
+                                                          color: Colors.blueGrey,
+                                                          // image: DecorationImage(
+                                                          //     image: AssetImage("assets/images/profile.png"), fit: BoxFit.contain),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.person,
+                                                          size: 175,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            child: CircleAvatar(
+                                              radius: 40,
+                                              // backgroundImage: NetworkImage(
+                                              //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
+                                              backgroundColor: Colors.blueGrey,
+                                              child: Icon(
+                                                Icons.person,
+                                                color: Colors.white,
+                                                size: 40,
+                                              ),
+                                            ),
+                                          ),
+                                  ),
+                                  SizedBox(
+                                    width: 15,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        updatedUserDoc['username'], // Assuming 'username' field exists in userDoc
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                      // loadController.siteLable.value != "" ?
+                                      Text(
+                                        "(${loadController.siteLable.value != "" ? loadController.siteLable.value : "Employee"})",
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w400,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ) /*:SizedBox.shrink()*/,
+                                      GestureDetector(
+                                        onTap: () {
+                                          launchEmail(updatedUserDoc['email']);
                                         },
-                                        child: CircleAvatar(
-                                          radius: 30,
-                                          // backgroundImage: NetworkImage(
-                                          //     'https://img.freepik.com/free-icon/user_318-159711.jpg?w=360'),
-                                          backgroundColor: Colors.blueGrey,
-                                          child: Icon(
-                                            Icons.person,
-                                            color: Colors.white,
-                                            size: 30,
+                                        child: Text(
+                                          updatedUserDoc['email'], // Assuming 'email' field exists in userDoc
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w400,
+                                            fontFamily: 'Inter',
+                                            height: 1.21,
                                           ),
                                         ),
                                       ),
-                              ),
-                              SizedBox(
-                                width: 15,
-                              ),
-                              Obx(
-                                () => Text(
-                                  '${loadController.siteLable.value /*.split(' ')[0]*/} Panel',
-                                  // textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Inter',
+                                    ],
                                   ),
-                                ),
+                                  /*
+                                  Obx(
+                                        () => Text(
+                                      '${loadController.siteLable.value /*.split(' ')[0]*/} Panel',
+                                      // textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Inter',
+                                      ),
+                                    ),
+                                  ),
+                                   */
+                                ],
                               ),
+                              // Spacer(),
+                              // const SizedBox(height: 10),
                             ],
                           ),
-                          Spacer(),
-                          // const SizedBox(height: 10),
-                          Text(
-                            updatedUserDoc['username'], // Assuming 'username' field exists in userDoc
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Inter',
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              launchEmail(updatedUserDoc['email']);
-                            },
-                            child: Text(
-                              updatedUserDoc['email'], // Assuming 'email' field exists in userDoc
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Inter',
-                                height: 1.21,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ListView(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.zero,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Column(
-                            children: [
-                              Card(
-                                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                color: Colors.white,
-                                child: ListTile(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  tileColor: Colors.white,
-                                  leading: Icon(
-                                    Icons.edit,
-                                    // ignore: deprecated_member_use
-                                    color: themecolor.withOpacity(0.65),
-                                  ),
-                                  title: const Text('Edit Profile',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 16,
-                                        fontFamily: 'Inter',
-                                        fontWeight: FontWeight.bold,
-                                      )),
-                                  subtitle: Text("Edit your personal details."),
-                                  onTap: () async {
-                                    final updatedData = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EmployeeEditProfilePage(userId: widget.userId),
+                        ),
+                        ListView(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Column(
+                                children: [
+                                  Card(
+                                    margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    color: Colors.white,
+                                    child: ListTile(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                    );
+                                      tileColor: Colors.white,
+                                      leading: Icon(
+                                        Icons.edit,
+                                        // ignore: deprecated_member_use
+                                        color: themecolor.withOpacity(0.65),
+                                      ),
+                                      title: const Text('Edit Profile',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                      subtitle: Text("Edit your personal details."),
+                                      trailing: Icon(
+                                        Icons.keyboard_arrow_right,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                      onTap: () async {
+                                        final updatedData = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => EmployeeEditProfilePage(userId: widget.userId),
+                                          ),
+                                        );
 
-                                    if (updatedData != null && updatedData is Map<String, dynamic>) {
-                                      _refreshProfileData();
-                                    }
-                                  },
-                                ),
-                              ),
-                              Card(
-                                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                color: Colors.white,
-                                child: ListTile(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                        if (updatedData != null && updatedData is Map<String, dynamic>) {
+                                          _refreshProfileData();
+                                        }
+                                      },
+                                    ),
                                   ),
-                                  tileColor: Colors.white,
-                                  leading: Icon(
-                                    Icons.lock,
-                                    // ignore: deprecated_member_use
-                                    color: themecolor.withOpacity(0.65),
-                                  ),
-                                  title: const Text('Change Password',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 16,
-                                        fontFamily: 'Inter',
-                                        fontWeight: FontWeight.bold,
-                                      )),
-                                  subtitle: Text("Change your current password."),
-                                  onTap: () {
-                                    // Navigator.of(context).pop();
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EmployeeChangePassword(userId: widget.userId),
+                                  Card(
+                                    margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    color: Colors.white,
+                                    child: ListTile(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              widget.fromAdmin == true
-                                  ? SizedBox()
-                                  : Card(
+                                      tileColor: Colors.white,
+                                      leading: Icon(
+                                        Icons.lock,
+                                        // ignore: deprecated_member_use
+                                        color: themecolor.withOpacity(0.65),
+                                      ),
+                                      title: const Text('Change Password',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                      subtitle: Text("Change your current password."),
+                                      trailing: Icon(
+                                        Icons.keyboard_arrow_right,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                      onTap: () {
+                                        // Navigator.of(context).pop();
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => EmployeeChangePassword(userId: widget.userId),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  widget.fromAdmin == true
+                                      ? SizedBox()
+                                      : Card(
+                                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          color: Colors.white,
+                                          child: Obx(() => SwitchListTile(
+                                              secondary: Icon(
+                                                Icons.pin_rounded,
+                                                // ignore: deprecated_member_use
+                                                color: themecolor.withOpacity(0.65),
+                                              ),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                              tileColor: Colors.white,
+                                              activeColor: themecolor,
+                                              title: Text(
+                                                'Set PIN',
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: 16.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  height: 1.21,
+                                                ),
+                                              ),
+                                              subtitle: Text("Secure your app with a PIN."),
+                                              value: loadController.isEmployeePinEnabled.value,
+                                              onChanged: (value) async {
+                                                try {
+                                                  if (!value) {
+                                                    // When the switch is turned OFF (Disable PIN)
+                                                    await FirebaseFirestore.instance
+                                                        .collection('Users')
+                                                        .doc(widget.userId)
+                                                        .update({'isSwitchOn': false, 'pin': ''}); // Update Firestore
+                                                    // setState(() {
+                                                    loadController.isEmployeePinEnabled.value = false;
+                                                    // });
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text("PIN disabled successfully.")),
+                                                    );
+                                                  } else {
+                                                    // When the switch is turned ON (Enable PIN)
+                                                    bool isSwitchOn = await loadController
+                                                        .getEmployeeSavedPinFromFirestore(widget.userId);
+                                                    if (isSwitchOn) {
+                                                      // If already enabled in Firestore
+                                                      // setState(() {
+                                                      loadController.isEmployeePinEnabled.value = true;
+                                                      // });
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text("PIN is already enabled.")),
+                                                      );
+                                                    } else {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) => EmployeeSetPin(
+                                                                  userId: widget.userId,
+                                                                  userDoc: widget.userDoc,
+                                                                )),
+                                                      ).then((result) async {
+                                                        final userDoc = await FirebaseFirestore.instance
+                                                            .collection('Users')
+                                                            .doc(widget.userId)
+                                                            .get();
+                                                        // setState(() {
+                                                        loadController.isEmployeePinEnabled.value =
+                                                            userDoc['isSwitchOn'] ?? false;
+                                                        // });
+                                                        await loadController
+                                                            .updateEmployeePinStatusFromFirestore(widget.userId);
+                                                      });
+                                                    }
+                                                  }
+                                                } catch (e) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text("An error occurred: $e")),
+                                                  );
+                                                }
+                                              })),
+                                        ),
+                                  /* Old Card
+                              Card(
                                       margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       color: Colors.white,
-                                      child: Obx(() => SwitchListTile(
-                                          secondary: Icon(
-                                            Icons.pin_rounded,
-                                            // ignore: deprecated_member_use
-                                            color: themecolor.withOpacity(0.65),
-                                          ),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          tileColor: Colors.white,
-                                          activeColor: themecolor,
-                                          title: Text(
-                                            'Set PIN',
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 16.0,
-                                              fontWeight: FontWeight.bold,
-                                              height: 1.21,
-                                            ),
-                                          ),
-                                          subtitle: Text("Secure your app with a PIN."),
-                                          value: loadController.isEmployeePinEnabled.value,
-                                          onChanged: (value) async {
-                                            try {
-                                              if (!value) {
-                                                // When the switch is turned OFF (Disable PIN)
-                                                await FirebaseFirestore.instance
-                                                    .collection('Users')
-                                                    .doc(widget.userId)
-                                                    .update({'isSwitchOn': false, 'pin': ''}); // Update Firestore
-                                                // setState(() {
-                                                loadController.isEmployeePinEnabled.value = false;
-                                                // });
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text("PIN disabled successfully.")),
-                                                );
-                                              } else {
-                                                // When the switch is turned ON (Enable PIN)
-                                                bool isSwitchOn = await loadController
-                                                    .getEmployeeSavedPinFromFirestore(widget.userId);
-                                                if (isSwitchOn) {
-                                                  // If already enabled in Firestore
-                                                  // setState(() {
-                                                  loadController.isEmployeePinEnabled.value = true;
-                                                  // });
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text("PIN is already enabled.")),
-                                                  );
-                                                } else {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (context) => EmployeeSetPin(
-                                                              userId: widget.userId,
-                                                              userDoc: widget.userDoc,
-                                                            )),
-                                                  ).then((result) async {
-                                                    final userDoc = await FirebaseFirestore.instance
-                                                        .collection('Users')
-                                                        .doc(widget.userId)
-                                                        .get();
-                                                    // setState(() {
-                                                    loadController.isEmployeePinEnabled.value =
-                                                        userDoc['isSwitchOn'] ?? false;
-                                                    // });
-                                                    await loadController
-                                                        .updateEmployeePinStatusFromFirestore(widget.userId);
-                                                  });
-                                                }
-                                              }
-                                            } catch (e) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text("An error occurred: $e")),
-                                              );
-                                            }
-                                          })),
-                                    ),
-                              /* Old Card
-                          Card(
-                                  margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  color: Colors.white,
-                                  child: ListTile(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    tileColor: Colors.white,
-                                    title: Text(
-                                      'Set PIN',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 16.0,
-                                        // fontWeight: FontWeight.w500,
-                                        height: 1.21,
-                                      ),
-                                    ),
-                                    leading: Icon(
-                                      Icons.lightbulb_outline,
-                                      color: Colors.grey,
-                                    ),
-                                    onTap: () {
-                                      // setState(() {
-                                      //   _lightsOn = !_lightsOn;
-                                      //   print(_lightsOn);
-                                      // });
-                                      // if (_lightsOn) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => EmployeeSetPin(
-                                                  userId: widget.userId,
-                                                  userDoc: widget.userDoc,
-                                                )),
-                                      );
-                                      // }
-                                    },
-                                  ),
-                                ),
-                          */
-                              /*Card(
-                            margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            color: Colors.white,
-                            child: ListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              tileColor: Colors.white,
-                              title: Text(
-                                'Set Defaults',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16.0,
-                                  // fontWeight: FontWeight.w500,
-                                  height: 1.21,
-                                ),
-                              ),
-                              leading: Icon(
-                                Icons.settings,
-                                color: Colors.grey,
-                              ),
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
-                                      return Dialog(
+                                      child: ListTile(
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(10),
                                         ),
-                                        child: Container(
-                                          padding: EdgeInsets.only(top: 10, bottom: 10),
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                                  children: [
-                                                    Text(
-                                                      "Set Default Date Pick",
-                                                      // ignore: deprecated_member_use
-                                                      textScaleFactor: 1.5,
-                                                      style: TextStyle(
-                                                        color: themecolor,
-                                                        fontWeight: FontWeight.bold,
+                                        tileColor: Colors.white,
+                                        title: Text(
+                                          'Set PIN',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 16.0,
+                                            // fontWeight: FontWeight.w500,
+                                            height: 1.21,
+                                          ),
+                                        ),
+                                        leading: Icon(
+                                          Icons.lightbulb_outline,
+                                          color: Colors.grey,
+                                        ),
+                                        onTap: () {
+                                          // setState(() {
+                                          //   _lightsOn = !_lightsOn;
+                                          //   print(_lightsOn);
+                                          // });
+                                          // if (_lightsOn) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) => EmployeeSetPin(
+                                                      userId: widget.userId,
+                                                      userDoc: widget.userDoc,
+                                                    )),
+                                          );
+                                          // }
+                                        },
+                                      ),
+                                    ),
+                              */
+                                  /*Card(
+                                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                color: Colors.white,
+                                child: ListTile(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  tileColor: Colors.white,
+                                  title: Text(
+                                    'Set Defaults',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 16.0,
+                                      // fontWeight: FontWeight.w500,
+                                      height: 1.21,
+                                    ),
+                                  ),
+                                  leading: Icon(
+                                    Icons.settings,
+                                    color: Colors.grey,
+                                  ),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
+                                          return Dialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Container(
+                                              padding: EdgeInsets.only(top: 10, bottom: 10),
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                      children: [
+                                                        Text(
+                                                          "Set Default Date Pick",
+                                                          // ignore: deprecated_member_use
+                                                          textScaleFactor: 1.5,
+                                                          style: TextStyle(
+                                                            color: themecolor,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        GestureDetector(
+                                                            onTap: () {
+                                                              Navigator.pop(context);
+                                                            },
+                                                            child: Icon(
+                                                              CupertinoIcons.clear,
+                                                              color: Colors.black,
+                                                            ))
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Divider(
+                                                    height: 0,
+                                                  ),
+                                                  SizedBox(
+                                                    height: 20,
+                                                  ),
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        isDateSelected = !isDateSelected;
+                                                        SharedPref.save(
+                                                          value: !isDateSelected ? '0' : '1',
+                                                          prefKey: PrefKey.defaultDatePickAdmin,
+                                                        );
+                                                        print(
+                                                            "Default Date Pick: ${SharedPref.get(prefKey: PrefKey.defaultDatePickAdmin)}");
+                                                      });
+                                                    },
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                                      child: Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                                        children: [
+                                                          SizedBox(width: 20),
+                                                          Expanded(
+                                                            child: Text(
+                                                              "Select Date Picker",
+                                                              style: TextStyle(fontSize: 16),
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 15),
+                                                          FlutterSwitch(
+                                                            value: isDateSelected,
+                                                            onToggle: (value) {
+                                                              setState(() {
+                                                                isDateSelected = value;
+                                                                SharedPref.save(
+                                                                  value: value ? '1' : '0',
+                                                                  prefKey: PrefKey.defaultDatePickAdmin,
+                                                                );
+                                                                print(
+                                                                    "Default Date Pick: ${SharedPref.get(prefKey: PrefKey.defaultDatePickAdmin)}");
+                                                              });
+                                                            },
+                                                            activeText: "Yes",
+                                                            inactiveText: "No",
+                                                            activeColor: Colors.indigo,
+                                                            inactiveColor: Colors.grey,
+                                                            activeTextColor: Colors.white,
+                                                            inactiveTextColor: Colors.white,
+                                                            valueFontSize: 14,
+                                                            width: 60,
+                                                            height: 28,
+                                                            borderRadius: 50.0,
+                                                            showOnOff: true,
+                                                          ),
+                                                          SizedBox(width: 20),
+                                                        ],
                                                       ),
                                                     ),
-                                                    GestureDetector(
-                                                        onTap: () {
-                                                          Navigator.pop(context);
-                                                        },
-                                                        child: Icon(
-                                                          CupertinoIcons.clear,
+                                                  ),
+                                                  SizedBox(
+                                                    height: 20,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        });
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),*/
+                                  widget.fromAdmin == true
+                                      ? SizedBox()
+                                      : Card(
+                                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          color: Colors.white,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Expanded(
+                                                child: Theme(
+                                                  data: ThemeData(
+                                                    highlightColor: Colors.transparent,
+                                                    splashColor: Colors.transparent,
+                                                  ),
+                                                  child: ListTile(
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    tileColor: Colors.white,
+                                                    leading: Icon(
+                                                      CupertinoIcons.location_solid,
+                                                      // ignore: deprecated_member_use
+                                                      color: themecolor.withOpacity(0.65),
+                                                    ),
+                                                    title: const Text('Allow Location Tracking',
+                                                        style: TextStyle(
                                                           color: Colors.black,
-                                                        ))
-                                                  ],
-                                                ),
-                                              ),
-                                              Divider(
-                                                height: 0,
-                                              ),
-                                              SizedBox(
-                                                height: 20,
-                                              ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  setState(() {
-                                                    isDateSelected = !isDateSelected;
-                                                    SharedPref.save(
-                                                      value: !isDateSelected ? '0' : '1',
-                                                      prefKey: PrefKey.defaultDatePickAdmin,
-                                                    );
-                                                    print(
-                                                        "Default Date Pick: ${SharedPref.get(prefKey: PrefKey.defaultDatePickAdmin)}");
-                                                  });
-                                                },
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                                  child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                                    children: [
-                                                      SizedBox(width: 20),
-                                                      Expanded(
-                                                        child: Text(
-                                                          "Select Date Picker",
-                                                          style: TextStyle(fontSize: 16),
+                                                          fontSize: 16,
+                                                          fontFamily: 'Inter',
+                                                          fontWeight: FontWeight.bold,
+                                                        )),
+                                                    subtitle: Column(
+                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text("All expenses will be tracked by location while adding."),
+                                                        Obx(
+                                                          () => loadController.fullEmployeeAddress.value != ""
+                                                              ? Text(
+                                                                  "${loadController.fullEmployeeAddress.value}",
+                                                                  style: TextStyle(color: Colors.green),
+                                                                )
+                                                              : SizedBox.shrink(),
                                                         ),
-                                                      ),
-                                                      SizedBox(width: 15),
-                                                      FlutterSwitch(
-                                                        value: isDateSelected,
-                                                        onToggle: (value) {
-                                                          setState(() {
-                                                            isDateSelected = value;
-                                                            SharedPref.save(
-                                                              value: value ? '1' : '0',
-                                                              prefKey: PrefKey.defaultDatePickAdmin,
-                                                            );
-                                                            print(
-                                                                "Default Date Pick: ${SharedPref.get(prefKey: PrefKey.defaultDatePickAdmin)}");
-                                                          });
-                                                        },
-                                                        activeText: "Yes",
-                                                        inactiveText: "No",
-                                                        activeColor: Colors.indigo,
-                                                        inactiveColor: Colors.grey,
-                                                        activeTextColor: Colors.white,
-                                                        inactiveTextColor: Colors.white,
-                                                        valueFontSize: 14,
-                                                        width: 60,
-                                                        height: 28,
-                                                        borderRadius: 50.0,
-                                                        showOnOff: true,
-                                                      ),
-                                                      SizedBox(width: 20),
-                                                    ],
+                                                      ],
+                                                    ),
+                                                    onTap: () async {
+                                                      if (loadController.fullEmployeeAddress.value == "") {
+                                                        bool shouldAddLocation =
+                                                            await showConfirmLocationDialog(context);
+                                                        if (shouldAddLocation) {
+                                                          loadController.requestLocationPermission(
+                                                              isAdmin: false, userId: widget.userId);
+                                                        }
+                                                      } else {
+                                                        showUpdateLocationDialog(context);
+                                                      }
+                                                    },
                                                   ),
                                                 ),
                                               ),
-                                              SizedBox(
-                                                height: 20,
+                                              Container(
+                                                padding: EdgeInsets.only(right: 15),
+                                                child: Obx(
+                                                  () => customSwitch(
+                                                    initialSwitchValue:
+                                                        loadController.fullEmployeeAddress.value != "" ? true : false,
+                                                    onSwitchChanged: (value) async {
+                                                      try {
+                                                        setState(() {
+                                                          isLoading = true;
+                                                        });
+
+                                                        final employeeEmail = SharedPref.get(prefKey: PrefKey.empEmail);
+                                                        if (employeeEmail != null) {
+                                                          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                              .collection('Users')
+                                                              .where('email', isEqualTo: employeeEmail)
+                                                              .get();
+
+                                                          if (querySnapshot.docs.isNotEmpty) {
+                                                            String userId = querySnapshot.docs.first.id;
+
+                                                            // If switch is turned off, ask for confirmation before updating Firestore
+                                                            if (!value) {
+                                                              bool shouldRemoveLocation =
+                                                                  await showRemoveLocationDialog(context);
+                                                              if (!shouldRemoveLocation) {
+                                                                setState(() {
+                                                                  isLoading = false;
+                                                                });
+                                                                return; // Don't proceed with updating Firestore
+                                                              }
+                                                            }
+
+                                                            // Define updates
+                                                            Map<String, dynamic> updates = {};
+
+                                                            // If switch is turned off, set 'place' to an empty string
+                                                            if (!value) {
+                                                              updates['place'] = "";
+                                                              loadController.fullAdminAddress.value = "";
+                                                            }
+
+                                                            await FirebaseFirestore.instance
+                                                                .collection('Users')
+                                                                .doc(userId)
+                                                                .update(updates);
+
+                                                            print(
+                                                                "Firestore updated: ${value ? "Yes" : "No"}, place set to ${!value ? 'empty string' : 'unchanged'}");
+                                                          } else {
+                                                            print("Admin document not found for email: $employeeEmail");
+                                                          }
+                                                        } else {
+                                                          print("Admin email not available.");
+                                                        }
+                                                      } catch (e) {
+                                                        print("Error updating Firestore: $e");
+                                                      } finally {
+                                                        setState(() {
+                                                          isLoading = false;
+                                                        });
+                                                      }
+
+                                                      if (value) {
+                                                        if (loadController.fullAdminAddress.value == "") {
+                                                          bool shouldAddLocation =
+                                                              await showConfirmLocationDialog(context);
+                                                          if (shouldAddLocation) {
+                                                            loadController.requestLocationPermission(
+                                                                isAdmin: false, userId: widget.userId);
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    switchActiveText: "Yes",
+                                                    switchInactiveText: "No",
+                                                  ),
+                                                ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                      );
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                          ),*/
-                              widget.fromAdmin == true
-                                  ? SizedBox()
-                                  : Card(
-                                      margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      color: Colors.white,
-                                      child: ListTile(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        tileColor: Colors.white,
-                                        leading: Icon(
-                                          CupertinoIcons.location_solid,
-                                          // ignore: deprecated_member_use
-                                          color: themecolor.withOpacity(0.65),
-                                        ),
-                                        title: const Text('Add Default Location',
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 16,
-                                              fontFamily: 'Inter',
-                                              fontWeight: FontWeight.bold,
-                                            )),
-                                        subtitle: Text("Store your current location."),
-                                        onTap: () {
-                                          // loadController.getCurrentLocation();
-                                        },
-                                      ),
-                                    ),
-                              widget.fromAdmin == true
-                                  ? SizedBox()
-                                  : Card(
-                                      margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      color: Colors.white,
-                                      child: ListTile(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        tileColor: Colors.white,
-                                        leading: Icon(
-                                          Icons.logout,
-                                          // ignore: deprecated_member_use
-                                          color: themecolor.withOpacity(0.65),
-                                        ),
-                                        title: const Text('Logout',
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 16,
-                                              fontFamily: 'Inter',
-                                              fontWeight: FontWeight.bold,
-                                            )),
-                                        subtitle: Text("Sign out from this account."),
-                                        onTap: () {
-                                          // Navigator.of(context).pop();
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return AlertDialog(
-                                                title: const Text('Logout Confirmation'),
-                                                content: const Text('Do you want to logout?'),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      // Close the dialog
-                                                      Navigator.of(context).pop();
-                                                    },
-                                                    child: const Text('No'),
-                                                  ),
-                                                  TextButton(
-                                                    style: const ButtonStyle(
-                                                        // ignore: deprecated_member_use
-                                                        backgroundColor: MaterialStatePropertyAll(Colors.transparent)),
-                                                    onPressed: () async {
-                                                      try {
-                                                        // Sign out the user
-                                                        SharedPref.deleteAll();
-                                                        await FirebaseAuth.instance.signOut();
-                                                        // Navigate to the login page
-                                                        // ignore: use_build_context_synchronously
-                                                        Navigator.pushAndRemoveUntil(
-                                                          context,
-                                                          MaterialPageRoute(builder: (context) => RootApp()),
-                                                          (Route<dynamic> route) =>
-                                                              false, // Prevent going back to this screen
-                                                        );
+                                  /*
+                                  Card(
+                                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          color: Colors.white,
+                                          child: ListTile(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            tileColor: Colors.white,
+                                            leading: Icon(
+                                              CupertinoIcons.location_solid,
+                                              // ignore: deprecated_member_use
+                                              color: themecolor.withOpacity(0.65),
+                                            ),
+                                            title: const Text('Add Default Location',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 16,
+                                                  fontFamily: 'Inter',
+                                                  fontWeight: FontWeight.bold,
+                                                )),
+                                            subtitle: Text("Store your current location."),
+                                            onTap: () {
+                                              // loadController.getCurrentLocation();
+                                              // setState(() {
+                                              //   loadController.employeeLat.value = "";
+                                              //   loadController.employeeLng.value = "";
+                                              // });
+                                              if (loadController.employeeLat.value == "" &&
+                                                  loadController.employeeLng.value == "") {
+                                                loadController.requestLocationPermission(
+                                                    isAdmin: false, userId: widget.userId);
+                                              } else {
+                                                showUpdateLocationDialog(context);
+                                              }
+                                            },
+                                          ),
+                                        )
+                                  */
+                                  widget.fromAdmin == true
+                                      ? SizedBox()
+                                      : Card(
+                                          margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          color: Colors.white,
+                                          child: ListTile(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            tileColor: Colors.white,
+                                            leading: Icon(
+                                              Icons.logout,
+                                              // ignore: deprecated_member_use
+                                              color: themecolor.withOpacity(0.65),
+                                            ),
+                                            title: const Text('Logout',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 16,
+                                                  fontFamily: 'Inter',
+                                                  fontWeight: FontWeight.bold,
+                                                )),
+                                            subtitle: Text("Sign out from this account."),
+                                            trailing: Icon(
+                                              Icons.keyboard_arrow_right,
+                                              color: Colors.grey.shade500,
+                                            ),
+                                            onTap: () {
+                                              // Navigator.of(context).pop();
+                                              showDialog(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title: const Text('Logout Confirmation'),
+                                                    content: const Text('Do you want to logout?'),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          // Close the dialog
+                                                          Navigator.of(context).pop();
+                                                        },
+                                                        child: const Text('No'),
+                                                      ),
+                                                      TextButton(
+                                                        style: const ButtonStyle(
+                                                            backgroundColor:
+                                                            // ignore: deprecated_member_use
+                                                                MaterialStatePropertyAll(Colors.transparent)),
+                                                        onPressed: () async {
+                                                          try {
+                                                            // Sign out the user
+                                                            SharedPref.deleteAll();
+                                                            await FirebaseAuth.instance.signOut();
+                                                            // Navigate to the login page
+                                                            // ignore: use_build_context_synchronously
+                                                            Navigator.pushAndRemoveUntil(
+                                                              context,
+                                                              MaterialPageRoute(builder: (context) => RootApp()),
+                                                              (Route<dynamic> route) =>
+                                                                  false, // Prevent going back to this screen
+                                                            );
 
-                                                        // SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-                                                      } catch (e) {
-                                                        if (kDebugMode) {
-                                                          print('Error signing out: $e');
-                                                        }
-                                                      }
-                                                    },
-                                                    child: const Text('Yes'),
-                                                  ),
-                                                ],
+                                                            // SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                                                          } catch (e) {
+                                                            if (kDebugMode) {
+                                                              print('Error signing out: $e');
+                                                            }
+                                                          }
+                                                        },
+                                                        child: const Text('Yes'),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
                                               );
                                             },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                            ],
-                          ),
-                        ),
-                        widget.fromAdmin == true
-                            ? SizedBox()
-                            : Column(children: [
-                                SizedBox(
-                                  height: 25,
-                                ),
-                                Card(
-                                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  color: Colors.white,
-                                  elevation: 0,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      // color: Colors.purple,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          // ignore: deprecated_member_use
-                                          color: themecolor.withOpacity(0.3),
-                                          blurRadius: 4,
-                                          offset: Offset(6, 5), // Shadow position
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                    child: ProfileCard(),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Card(
-                                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  color: Colors.white,
-                                  elevation: 0,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      // color: Colors.purple,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          // ignore: deprecated_member_use
-                                          color: themecolor.withOpacity(0.3),
-                                          blurRadius: 4,
-                                          offset: Offset(6, 5), // Shadow position
-                                        ),
-                                      ],
-                                    ),
-                                    child: ProfileCard2(),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Card(
-                                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  color: Colors.white,
-                                  elevation: 0,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      // color: Colors.purple,
-                                      borderRadius: BorderRadius.circular(20),
-                                      // border: Border.all(color: Color(0xffffecb5), width: 1),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          // ignore: deprecated_member_use
-                                          color: Color(0xaaffffcd).withOpacity(0.3),
-                                          blurRadius: 4,
-                                          offset: Offset(6, 5), // Shadow position
-                                        ),
-                                      ],
-                                    ),
-                                    child: ProfileCard3(),
-                                  ),
-                                ),
-                              ]),
-                        SizedBox(
-                          height: 25,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                          child: InkWell(
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text("Backup Cash Book !!!"),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Text(
-                                          '''
-                                            Follow the steps
-                                            
-                                            Cashbook Local Backup
-                                            1. Click on 'Backup' Button.
-                                            2. Select/Create the specific folder on local storage to backup. (older one is 'cashbook_backup' or create a new one)
-                                            3. Keep the file name 'Clients.csv' and 'Transactions.csv' in the same folder.
-                                            4. That's it. Backup Done. 
-                                            ''',
-                                          style:
-                                              TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w400),
-                                        ),
-                                      ],
-                                    ),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: const Text("Cancel"),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          // EasyLoading.show(status: "Loading.");
-                                          // AppDatabaseHelper().exportClientsToCsv();
-                                          // EasyLoading.dismiss();
-                                        },
-                                        child: const Text("Backup"),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: Color(0xaaffffcd),
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(color: Color(0xffffecb5), width: 1)),
-                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              child: RichText(
-                                  text: TextSpan(
-                                      text: "Note: ",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w500, color: Color(0xff664d03), fontSize: 12),
-                                      children: [
-                                    TextSpan(
-                                        text:
-                                            "Kindly create a daily data backup routine to ensure the safety and integrity of your accounts.",
-                                        style: TextStyle(fontWeight: FontWeight.w400, color: Color(0xff664d03))),
-                                    TextSpan(text: " Backup Now »"),
-                                  ])),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 50,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Obx(() => loadController.loadEmployeeSwitch.isTrue
-                    ? Container(
-                        height: MediaQuery.of(context).size.height,
-                        alignment: Alignment.center,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(themecolor),
-                          ),
-                        ),
-                      )
-                    : SizedBox.shrink()),
-                Obx(
-                  () => loadController.locationLoading.isTrue
-                      ? Center(
-                          child: FittedBox(
-                            fit: BoxFit.fitWidth,
-                            child: Container(
-                              padding: EdgeInsets.all(20),
-                              decoration:
-                                  BoxDecoration(color: Colors.grey.shade900, borderRadius: BorderRadius.circular(20)),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 4,
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  Text(
-                                    "Fetching Location",
-                                    style:
-                                        TextStyle(color: Colors.white, fontSize: 12, decoration: TextDecoration.none),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Text(
-                                    "Please Wait...",
-                                    style:
-                                        TextStyle(color: Colors.white, fontSize: 12, decoration: TextDecoration.none),
-                                  ),
                                 ],
                               ),
                             ),
-                          ),
-                        )
-                      : SizedBox.shrink(),
+                            widget.fromAdmin == true
+                                ? SizedBox()
+                                : Column(children: [
+                                    /*
+                                    Card(
+                                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      color: Colors.white,
+                                      elevation: 0,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          // color: Colors.purple,
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              // ignore: deprecated_member_use
+                                              color: themecolor.withOpacity(0.3),
+                                              blurRadius: 4,
+                                              offset: Offset(6, 5), // Shadow position
+                                            ),
+                                          ],
+                                        ),
+                                        child: ProfileCard(),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    Card(
+                                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      color: Colors.white,
+                                      elevation: 0,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          // color: Colors.purple,
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              // ignore: deprecated_member_use
+                                              color: themecolor.withOpacity(0.3),
+                                              blurRadius: 4,
+                                              offset: Offset(6, 5), // Shadow position
+                                            ),
+                                          ],
+                                        ),
+                                        child: ProfileCard2(),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    */
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 10),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              height: 1.5,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(10),
+                                                gradient: LinearGradient(
+                                                  colors: [Colors.transparent, Colors.grey, Colors.grey],
+                                                  // stops: [0.0, 0.5, 1.0], // Center strong, edges fade out
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          Text(
+                                            "Contact Admin",
+                                            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          Expanded(
+                                            child: Container(
+                                              height: 1.5,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(10),
+                                                gradient: LinearGradient(
+                                                  colors: [Colors.grey, Colors.grey, Colors.transparent],
+                                                  // stops: [0.0, 0.5, 1.0], // Center strong, edges fade out
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Card(
+                                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      color: Colors.white,
+                                      elevation: 0,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          // color: Colors.purple,
+                                          borderRadius: BorderRadius.circular(20),
+                                          // border: Border.all(color: Color(0xffffecb5), width: 1),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              // ignore: deprecated_member_use
+                                              color: Color(0xaaffffcd).withOpacity(0.3),
+                                              blurRadius: 4,
+                                              offset: Offset(6, 5), // Shadow position
+                                            ),
+                                          ],
+                                        ),
+                                        child: ProfileCard3(),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 50,
+                                    ),
+                                  ]),
+                            /*SizedBox(
+                              height: 25,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                              child: InkWell(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text("Backup Cash Book !!!"),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text(
+                                              '''
+                                                Follow the steps
+
+                                                Cashbook Local Backup
+                                                1. Click on 'Backup' Button.
+                                                2. Select/Create the specific folder on local storage to backup. (older one is 'cashbook_backup' or create a new one)
+                                                3. Keep the file name 'Clients.csv' and 'Transactions.csv' in the same folder.
+                                                4. That's it. Backup Done.
+                                                ''',
+                                              style:
+                                                  TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w400),
+                                            ),
+                                          ],
+                                        ),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text("Cancel"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              // EasyLoading.show(status: "Loading.");
+                                              // AppDatabaseHelper().exportClientsToCsv();
+                                              // EasyLoading.dismiss();
+                                            },
+                                            child: const Text("Backup"),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                      color: Color(0xaaffffcd),
+                                      borderRadius: BorderRadius.circular(5),
+                                      border: Border.all(color: Color(0xffffecb5), width: 1)),
+                                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  child: RichText(
+                                      text: TextSpan(
+                                          text: "Note: ",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500, color: Color(0xff664d03), fontSize: 12),
+                                          children: [
+                                        TextSpan(
+                                            text:
+                                                "Kindly create a daily data backup routine to ensure the safety and integrity of your accounts.",
+                                            style: TextStyle(fontWeight: FontWeight.w400, color: Color(0xff664d03))),
+                                        TextSpan(text: " Backup Now »"),
+                                      ])),
+                                ),
+                              ),
+                            ),*/
+                            SizedBox(
+                              height: 50,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Obx(() => loadController.loadEmployeeSwitch.isTrue
+                        ? Container(
+                            height: MediaQuery.of(context).size.height,
+                            alignment: Alignment.center,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(themecolor),
+                              ),
+                            ),
+                          )
+                        : SizedBox.shrink()),
+                    Obx(
+                      () => loadController.employeeLocationLoading.isTrue
+                          ? Container(
+                              alignment: Alignment.center,
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              child: FittedBox(
+                                fit: BoxFit.fitWidth,
+                                child: Container(
+                                  padding: EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey.shade900, borderRadius: BorderRadius.circular(20)),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 4,
+                                      ),
+                                      SizedBox(
+                                        height: 20,
+                                      ),
+                                      Text(
+                                        "Fetching Location",
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 12, decoration: TextDecoration.none),
+                                      ),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text(
+                                        "Please Wait...",
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 12, decoration: TextDecoration.none),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : SizedBox.shrink(),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          isLoading
+              ? Center(
+                  child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    alignment: Alignment.center,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(themecolor),
+                      ),
+                    ),
+                  ),
+                )
+              : SizedBox.shrink(),
+        ],
       ),
+    );
+  }
+
+  Widget customSwitch({
+    required bool initialSwitchValue,
+    required ValueChanged<bool> onSwitchChanged,
+    String switchActiveText = "Yes",
+    String switchInactiveText = "No",
+  }) {
+    return FlutterSwitch(
+      value: initialSwitchValue,
+      onToggle: (value) {
+        onSwitchChanged(value);
+      },
+      activeText: switchActiveText,
+      inactiveText: switchInactiveText,
+      activeColor: Colors.indigo,
+      inactiveColor: Colors.grey,
+      activeTextColor: Colors.white,
+      inactiveTextColor: Colors.white,
+      valueFontSize: 14,
+      width: 60,
+      height: 28,
+      borderRadius: 50.0,
+      showOnOff: true,
     );
   }
 }
@@ -2159,129 +2513,103 @@ class ProfileCard3 extends StatelessWidget {
                         ),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () async {
-                        launchEmail(controller.email.value);
-                      },
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: Text(
-                          controller.email.value,
-                          // ignore: deprecated_member_use
-                          textScaleFactor: 1,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Color(0xff664d03),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                    Text(
+                      "${controller.username.value} (Owner)",
+                      // ignore: deprecated_member_use
+                      textScaleFactor: 1,
+                      maxLines: 1,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        // fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xff664d03),
+                      ),
+                    ),
+                    Text(
+                      "${controller.companyAddress.value}",
+                      // ignore: deprecated_member_use
+                      textScaleFactor: 1,
+                      maxLines: 1,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        // fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xff664d03),
                       ),
                     ),
                     SizedBox(height: 8),
-                    Row(
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            "Owner :",
-                            // ignore: deprecated_member_use
-                            textScaleFactor: 1,
-                            style: GoogleFonts.poppins(
-                              // fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xff664d03),
-                            ),
-                          ),
-                        ),
-                        Spacer(),
-                        SizedBox(
-                          width: 120,
-                          child: Text(
-                            "${controller.username.value}",
-                            // ignore: deprecated_member_use
-                            textScaleFactor: 1,
-                            textAlign: TextAlign.end,
-                            maxLines: 1,
-                            softWrap: true,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              // fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xff664d03),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                     GestureDetector(
                       onTap: () async {
                         // ignore: deprecated_member_use
                         launch("tel:${controller.phone.value}");
                       },
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            "Contact :",
-                            // ignore: deprecated_member_use
-                            textScaleFactor: 1,
-                            style: GoogleFonts.poppins(
-                              // fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xff664d03),
-                            ),
-                          ),
-                          Spacer(),
-                          SizedBox(
-                            width: 120,
-                            child: Text(
-                              "${controller.phone.value}",
-                              // ignore: deprecated_member_use
-                              textScaleFactor: 1,
-                              textAlign: TextAlign.end,
-                              maxLines: 1,
-                              softWrap: true,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                // fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xff664d03),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          "Address :",
-                          // ignore: deprecated_member_use
-                          textScaleFactor: 1,
-                          style: GoogleFonts.poppins(
-                            // fontSize: 18,
-                            fontWeight: FontWeight.w500,
+                          Icon(
+                            CupertinoIcons.phone,
                             color: Color(0xff664d03),
+                            size: 18,
                           ),
-                        ),
-                        Spacer(),
-                        SizedBox(
-                          width: 120,
-                          child: Text(
-                            "${controller.companyAddress.value}",
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            "${controller.phone.value}",
                             // ignore: deprecated_member_use
                             textScaleFactor: 1,
-                            textAlign: TextAlign.end,
                             maxLines: 1,
                             softWrap: true,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
                               // fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: Color(0xff664d03),
+                              decoration: TextDecoration.underline,
+                              decorationStyle: TextDecorationStyle.solid,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        launchEmail(controller.email.value);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.email_outlined,
+                            color: Color(0xff664d03),
+                            size: 18,
+                          ),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: Text(
+                                controller.email.value,
+                                // ignore: deprecated_member_use
+                                textScaleFactor: 1,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Color(0xff664d03),
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                  decorationStyle: TextDecorationStyle.solid,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

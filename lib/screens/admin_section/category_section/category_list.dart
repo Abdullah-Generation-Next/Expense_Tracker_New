@@ -253,6 +253,17 @@ class _CategoryScreenState extends State<CategoryScreen> {
               );
             }
             final totalCategories = snapshot.data?.docs.length ?? 0;
+            if (totalCategories == 0) {
+              return Text(
+                'Categories',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Inter',
+                  color: kwhite,
+                ),
+              );
+            }
             return Text(
               'Categories ($totalCategories)',
               style: TextStyle(

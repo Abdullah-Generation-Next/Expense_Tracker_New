@@ -25,8 +25,11 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    // loadController.adminLat.value = "";
+    // loadController.adminLng.value = "";
     constants.loadAdminFromFirestore(widget.adminId);
     loadController.lableController.text = loadController.siteLable.value;
+    loadController.adminLocationLoading.value = false;
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -45,7 +48,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('Site Lable'),
+              Text('Employee Lable'),
               GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
@@ -61,10 +64,10 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             child: TextFormField(
               controller: loadController.lableController,
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(hintText: 'Enter category name'),
+              decoration: InputDecoration(hintText: 'Enter employee lable'),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Category name cannot be empty';
+                  return 'Lable name cannot be empty';
                 }
                 return null;
               },
@@ -79,17 +82,27 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                Navigator.pop(context);
                 setState(() {
                   isLoading = true;
                 });
-                Navigator.pop(context);
-                String newLabel = loadController.lableController.text;
-                if (newLabel.isNotEmpty) {
-                  await loadController.updateSiteLabel(newLabel);
-                  setState(() {
-                    isLoading = false;
-                  });
+                // String newLabel = loadController.lableController.text;
+                // if (newLabel.isNotEmpty) {
+                //   await loadController.updateSiteLabel(newLabel);
+                //   setState(() {
+                //     isLoading = false;
+                //   });
+                // }
+                String newLabel = loadController.lableController.text.trim();
+                if (newLabel.isEmpty) {
+                  newLabel = "Employee";
                 }
+
+                await loadController.updateSiteLabel(newLabel);
+
+                setState(() {
+                  isLoading = false;
+                });
               },
               child: isLoading
                   ? CircularProgressIndicator(
@@ -104,6 +117,117 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void showUpdateLocationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Update Location"),
+          content: Text("Are you sure you want to update your location?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                loadController.requestLocationPermission(isAdmin: true, adminId: widget.adminId);
+              },
+              child: Text("Update"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> showRemoveLocationDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Disable Location Tracking?"),
+              content: Text(
+                "Are you sure you want to disable location tracking? This will remove your saved location, and expenses will no longer be tracked by location.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false), // Cancel
+                  child: Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true), // Confirm
+                  child: Text("Yes, Disable"),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+  Future<bool> showConfirmLocationDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Add Current Location"),
+            content: Text("Do you want to enable location tracking and add your current location?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Add"),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Widget categoryCountText(String adminId) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('Admin').doc(adminId).collection('categories').snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text(
+            'Customize Categories (...)',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Inter',
+              color: Colors.black,
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return const Text(
+            'Customize Categories (Error)',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Inter',
+              color: Colors.black,
+            ),
+          );
+        }
+        final totalCategories = snapshot.data?.docs.length ?? 0;
+        return Text(
+          totalCategories == 0 ? 'Customize Categories' : 'Customize Categories ($totalCategories)',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Inter',
+            color: Colors.black,
+          ),
         );
       },
     );
@@ -162,14 +286,69 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                   // ignore: deprecated_member_use
                                   color: themecolor.withOpacity(0.65),
                                 ),
-                                title: const Text('Categories',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.bold,
-                                    )),
-                                subtitle: Text("Manage your expenses categories from here."),
+                                title:
+                                    // Text('Customize Categories (6)',
+                                    //     style: TextStyle(
+                                    //       color: Colors.black,
+                                    //       fontSize: 16,
+                                    //       fontFamily: 'Inter',
+                                    //       fontWeight: FontWeight.bold,
+                                    //     )),
+                                    categoryCountText(widget.adminId),
+                                /* StreamBuilder<QuerySnapshot>(
+                                    stream:
+                                    FirebaseFirestore.instance.collection('Admin').doc(widget.adminId).collection('categories').snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return Text(
+                                          'Customize Categories (...)',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Inter',
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                      }
+                                      if (snapshot.hasError) {
+                                        return Text(
+                                          'Customize Categories (Error)',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Inter',
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                      }
+                                      final totalCategories = snapshot.data?.docs.length ?? 0;
+                                      if (totalCategories == 0) {
+                                        return Text(
+                                          'Customize Categories',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Inter',
+                                            color: Colors.black,
+                                          ),
+                                        );
+                                      }
+                                      return Text(
+                                        'Customize Categories ($totalCategories)',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Inter',
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    },
+                                  ),*/
+                                subtitle: Text("Manage expense categories."),
+                                trailing: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Colors.grey.shade500,
+                                ),
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -177,6 +356,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                       builder: (context) => CategoryScreen(adminId: widget.adminId),
                                     ),
                                   );
+                                  setState(() {});
                                 },
                               ),
                             ),
@@ -196,14 +376,32 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                   // ignore: deprecated_member_use
                                   color: themecolor.withOpacity(0.65),
                                 ),
-                                title: const Text('Expense Lable',
+                                title: const Text('Customize Employee Lable',
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.bold,
                                     )),
-                                subtitle: Text("Edit your expense lable over all app."),
+                                subtitle: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Change employee lable as per need, i.e. Student, Site, Customer..."),
+                                    Obx(
+                                      () => loadController.siteLable.value != "Employee"
+                                          ? Text(
+                                              "${loadController.siteLable.value}",
+                                              style: TextStyle(color: Colors.green),
+                                            )
+                                          : SizedBox.shrink(),
+                                    ),
+                                  ],
+                                ),
+                                trailing: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Colors.grey.shade500,
+                                ),
                                 onTap: () {
                                   _showSiteLableDialog(context);
                                 },
@@ -215,68 +413,696 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               color: Colors.white,
-                              child: ListTile(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                tileColor: Colors.white,
-                                leading: Icon(
-                                  Icons.approval_outlined,
-                                  // ignore: deprecated_member_use
-                                  color: themecolor.withOpacity(0.65),
-                                ),
-                                subtitle: Text("All expenses make default auto approve."),
-                                title: const Text('Auto Approve',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.bold,
-                                    )),
-                                onTap: () {
-                                  showCustomDialog(
-                                    title: "Auto Approve",
-                                    switchTitle: "Auto",
-                                    context: context,
-                                    initialSwitchValue: loadController.isAutoApprove.value == "Yes" ? true : false,
-                                    onSwitchChanged: (value) async {
-                                      try {
-                                        final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
-                                        if (adminEmail != null) {
-                                          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-                                              .collection('Admin')
-                                              .where('email', isEqualTo: adminEmail)
-                                              .get();
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Theme(
+                                      data: ThemeData(
+                                        highlightColor: Colors.transparent,
+                                        splashColor: Colors.transparent,
+                                      ),
+                                      child: ListTile(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        tileColor: Colors.white,
+                                        leading: Icon(
+                                          Icons.approval_outlined,
+                                          // ignore: deprecated_member_use
+                                          color: themecolor.withOpacity(0.65),
+                                        ),
+                                        subtitle: Text("All expenses will be auto-approved by default while adding."),
+                                        title: Text(
+                                          'Auto Approve Expense',
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        onTap: () async {
+                                          bool currentValue = loadController.isAutoApprove.value == "Yes";
+                                          bool newValue = !currentValue; // Toggle the value
 
-                                          if (querySnapshot.docs.isNotEmpty) {
-                                            String adminId = querySnapshot.docs.first.id;
-
-                                            await FirebaseFirestore.instance
-                                                .collection('Admin')
-                                                .doc(adminId)
-                                                .update({'is_auto_approve': value ? "Yes" : "No"});
-
-                                            print("Firestore updated: is_auto_approve set to ${value ? "Yes" : "No"}");
-
+                                          try {
                                             setState(() {
-                                              loadController.isAutoApprove.value = value ? "Yes" : "No";
+                                              isLoading = true;
                                             });
-                                          } else {
-                                            print("Admin document not found for email: $adminEmail");
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update({'is_auto_approve': newValue ? "Yes" : "No"});
+
+                                                print(
+                                                    "Firestore updated: is_auto_approve set to ${newValue ? "Yes" : "No"}");
+
+                                                loadController.isAutoApprove.value = newValue ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
                                           }
-                                        } else {
-                                          print("Admin email not available.");
+                                        },
+                                        // onTap: () {
+                                        //   showCustomDialog(
+                                        //     title: "Auto Approve",
+                                        //     switchTitle: "Auto",
+                                        //     context: context,
+                                        //     initialSwitchValue: loadController.isAutoApprove.value == "Yes" ? true : false,
+                                        //     onSwitchChanged: (value) async {
+                                        //       try {
+                                        //         final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                        //         if (adminEmail != null) {
+                                        //           QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                        //               .collection('Admin')
+                                        //               .where('email', isEqualTo: adminEmail)
+                                        //               .get();
+                                        //
+                                        //           if (querySnapshot.docs.isNotEmpty) {
+                                        //             String adminId = querySnapshot.docs.first.id;
+                                        //
+                                        //             await FirebaseFirestore.instance
+                                        //                 .collection('Admin')
+                                        //                 .doc(adminId)
+                                        //                 .update({'is_auto_approve': value ? "Yes" : "No"});
+                                        //
+                                        //             print("Firestore updated: is_auto_approve set to ${value ? "Yes" : "No"}");
+                                        //
+                                        //             setState(() {
+                                        //               loadController.isAutoApprove.value = value ? "Yes" : "No";
+                                        //             });
+                                        //           } else {
+                                        //             print("Admin document not found for email: $adminEmail");
+                                        //           }
+                                        //         } else {
+                                        //           print("Admin email not available.");
+                                        //         }
+                                        //       } catch (e) {
+                                        //         print("Error updating Firestore: $e");
+                                        //       }
+                                        //     },
+                                        //     switchActiveText: "Yes",
+                                        //     switchInactiveText: "No",
+                                        //   );
+                                        // },
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.only(right: 15),
+                                    child: Obx(
+                                      () => customSwitch(
+                                        initialSwitchValue: loadController.isAutoApprove.value == "Yes" ? true : false,
+                                        onSwitchChanged: (value) async {
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update({'is_auto_approve': value ? "Yes" : "No"});
+
+                                                print(
+                                                    "Firestore updated: is_auto_approve set to ${value ? "Yes" : "No"}");
+
+                                                loadController.isAutoApprove.value = value ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+                                        },
+                                        switchActiveText: "Yes",
+                                        switchInactiveText: "No",
+                                      ),
+                                    ),
+                                    /*FlutterSwitch(
+                                      value: loadController.isAutoApprove.value == "Yes" ? true : false,
+                                      onToggle: (value) async {
+                                        loadController.isAutoApprove.value == "Yes" ? true : false;
+                                        try {
+                                          final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                          if (adminEmail != null) {
+                                            QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                .collection('Admin')
+                                                .where('email', isEqualTo: adminEmail)
+                                                .get();
+
+                                            if (querySnapshot.docs.isNotEmpty) {
+                                              String adminId = querySnapshot.docs.first.id;
+
+                                              await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .doc(adminId)
+                                                  .update({'is_auto_approve': value ? "Yes" : "No"});
+
+                                              print("Firestore updated: is_auto_approve set to ${value ? "Yes" : "No"}");
+
+                                              loadController.isAutoApprove.value = value ? "Yes" : "No";
+                                              setState(() {
+
+                                              });
+                                            } else {
+                                              print("Admin document not found for email: $adminEmail");
+                                            }
+                                          } else {
+                                            print("Admin email not available.");
+                                          }
+                                        } catch (e) {
+                                          print("Error updating Firestore: $e");
                                         }
-                                      } catch (e) {
-                                        print("Error updating Firestore: $e");
-                                      }
-                                    },
-                                    switchActiveText: "Yes",
-                                    switchInactiveText: "No",
-                                  );
-                                },
+                                      },
+                                      activeText: "Yes",
+                                      inactiveText: "No",
+                                      activeColor: Colors.indigo,
+                                      inactiveColor: Colors.grey,
+                                      activeTextColor: Colors.white,
+                                      inactiveTextColor: Colors.white,
+                                      valueFontSize: 14,
+                                      width: 60,
+                                      height: 28,
+                                      borderRadius: 50.0,
+                                      showOnOff: true,
+                                    ),*/
+                                  ),
+                                ],
                               ),
                             ),
+                            Card(
+                              margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              color: Colors.white,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Theme(
+                                      data: ThemeData(
+                                        highlightColor: Colors.transparent,
+                                        splashColor: Colors.transparent,
+                                      ),
+                                      child: ListTile(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        tileColor: Colors.white,
+                                        leading: Icon(
+                                          Icons.date_range_rounded,
+                                          // ignore: deprecated_member_use
+                                          color: themecolor.withOpacity(0.65),
+                                        ),
+                                        title: const Text('Allow to change Expense Date',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                        subtitle: Text("If set, the expense date can be changed with the date picker."),
+                                        onTap: () async {
+                                          bool currentValue = loadController.allowDateToChange.value == "Yes";
+                                          bool newValue = !currentValue; // Toggle the value
+
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update({'allow_date_to_change': newValue ? "Yes" : "No"});
+
+                                                print(
+                                                    "Firestore updated: allow_date_to_change set to ${newValue ? "Yes" : "No"}");
+
+                                                loadController.allowDateToChange.value = newValue ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.only(right: 15),
+                                    child: Obx(
+                                      () => customSwitch(
+                                        initialSwitchValue:
+                                            loadController.allowDateToChange.value == "Yes" ? true : false,
+                                        onSwitchChanged: (value) async {
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update({'allow_date_to_change': value ? "Yes" : "No"});
+
+                                                print(
+                                                    "Firestore updated: allow_date_to_change set to ${value ? "Yes" : "No"}");
+
+                                                loadController.allowDateToChange.value = value ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+                                        },
+                                        switchActiveText: "Yes",
+                                        switchInactiveText: "No",
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Card(
+                              margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              color: Colors.white,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Theme(
+                                      data: ThemeData(
+                                        highlightColor: Colors.transparent,
+                                        splashColor: Colors.transparent,
+                                      ),
+                                      child: ListTile(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        tileColor: Colors.white,
+                                        leading: Icon(
+                                          Icons.smart_button_rounded,
+                                          // ignore: deprecated_member_use
+                                          color: themecolor.withOpacity(0.65),
+                                        ),
+                                        title: const Text('Allow Expense Deletion',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                        subtitle: Text("If set, the expense can be deleted by the Employee."),
+                                        onTap: () async {
+                                          bool currentValue = loadController.showDeleteButton.value == "Yes";
+                                          bool newValue = !currentValue; // Toggle the value
+
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update({'show_delete_button': newValue ? "Yes" : "No"});
+
+                                                print(
+                                                    "Firestore updated: show_delete_button set to ${newValue ? "Yes" : "No"}");
+
+                                                loadController.showDeleteButton.value = newValue ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.only(right: 15),
+                                    child: Obx(
+                                      () => customSwitch(
+                                        initialSwitchValue:
+                                            loadController.showDeleteButton.value == "Yes" ? true : false,
+                                        onSwitchChanged: (value) async {
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update({'show_delete_button': value ? "Yes" : "No"});
+
+                                                print(
+                                                    "Firestore updated: show_delete_button set to ${value ? "Yes" : "No"}");
+
+                                                loadController.showDeleteButton.value = value ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+                                        },
+                                        switchActiveText: "Yes",
+                                        switchInactiveText: "No",
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Card(
+                              margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              color: Colors.white,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Theme(
+                                      data: ThemeData(
+                                        highlightColor: Colors.transparent,
+                                        splashColor: Colors.transparent,
+                                      ),
+                                      child: ListTile(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        tileColor: Colors.white,
+                                        leading: Icon(
+                                          CupertinoIcons.location_solid,
+                                          // ignore: deprecated_member_use
+                                          color: themecolor.withOpacity(0.65),
+                                        ),
+                                        title: const Text('Allow Location Tracking',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.bold,
+                                            )),
+                                        subtitle: Column(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text("All expenses will be tracked by location while adding."),
+                                            Obx(
+                                              () => loadController.fullAdminAddress.value != ""
+                                                  ? Text(
+                                                      "${loadController.fullAdminAddress.value}",
+                                                      style: TextStyle(color: Colors.green),
+                                                    )
+                                                  : SizedBox.shrink(),
+                                            ),
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          if (loadController.fullAdminAddress.value == "") {
+                                            bool shouldAddLocation = await showConfirmLocationDialog(context);
+                                            if (shouldAddLocation) {
+                                              loadController.requestLocationPermission(
+                                                  isAdmin: true, adminId: widget.adminId);
+                                            }
+                                          } else {
+                                            showUpdateLocationDialog(context);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.only(right: 15),
+                                    child: Obx(
+                                      () => customSwitch(
+                                        initialSwitchValue: loadController.fullAdminAddress.value != "" ? true : false,
+                                        /*onSwitchChanged: (value) async {
+                                          if (value) {
+                                            if (loadController.fullAdminAddress.value == "") {
+                                              bool shouldAddLocation = await showConfirmLocationDialog(context);
+                                              if (shouldAddLocation) {
+                                                loadController.requestLocationPermission(
+                                                    isAdmin: true, adminId: widget.adminId);
+                                              }
+                                            }
+                                          } else {
+                                            loadController.fullAdminAddress.value = "";
+                                          }
+                                        },*/
+                                        /*onSwitchChanged: (value) async {
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                // Define updates
+                                                Map<String, dynamic> updates = {
+                                                  'show_delete_button': value ? "Yes" : "No",
+                                                };
+
+                                                // If switch is turned off, set 'place' to an empty string
+                                                if (!value) {
+                                                  updates['place'] = "";
+                                                  loadController.fullAdminAddress.value = "";
+                                                }
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update(updates);
+
+                                                print("Firestore updated: ${value ? "Yes" : "No"}, place set to ${!value ? 'empty string' : 'unchanged'}");
+
+                                                loadController.showDeleteButton.value = value ? "Yes" : "No";
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+
+                                          if (value) {
+                                            if (loadController.fullAdminAddress.value == "") {
+                                              bool shouldAddLocation = await showConfirmLocationDialog(context);
+                                              if (shouldAddLocation) {
+                                                loadController.requestLocationPermission(isAdmin: true, adminId: widget.adminId);
+                                              }
+                                            }
+                                          }
+                                        },*/
+                                        onSwitchChanged: (value) async {
+                                          try {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+
+                                            final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+                                            if (adminEmail != null) {
+                                              QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+                                                  .collection('Admin')
+                                                  .where('email', isEqualTo: adminEmail)
+                                                  .get();
+
+                                              if (querySnapshot.docs.isNotEmpty) {
+                                                String adminId = querySnapshot.docs.first.id;
+
+                                                // If switch is turned off, ask for confirmation before updating Firestore
+                                                if (!value) {
+                                                  bool shouldRemoveLocation = await showRemoveLocationDialog(context);
+                                                  if (!shouldRemoveLocation) {
+                                                    setState(() {
+                                                      isLoading = false;
+                                                    });
+                                                    return; // Don't proceed with updating Firestore
+                                                  }
+                                                }
+
+                                                // Define updates
+                                                Map<String, dynamic> updates = {};
+
+                                                // If switch is turned off, set 'place' to an empty string
+                                                if (!value) {
+                                                  updates['place'] = "";
+                                                  loadController.fullAdminAddress.value = "";
+                                                }
+
+                                                await FirebaseFirestore.instance
+                                                    .collection('Admin')
+                                                    .doc(adminId)
+                                                    .update(updates);
+
+                                                print(
+                                                    "Firestore updated: ${value ? "Yes" : "No"}, place set to ${!value ? 'empty string' : 'unchanged'}");
+                                              } else {
+                                                print("Admin document not found for email: $adminEmail");
+                                              }
+                                            } else {
+                                              print("Admin email not available.");
+                                            }
+                                          } catch (e) {
+                                            print("Error updating Firestore: $e");
+                                          } finally {
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          }
+
+                                          if (value) {
+                                            if (loadController.fullAdminAddress.value == "") {
+                                              bool shouldAddLocation = await showConfirmLocationDialog(context);
+                                              if (shouldAddLocation) {
+                                                loadController.requestLocationPermission(
+                                                    isAdmin: true, adminId: widget.adminId);
+                                              }
+                                            }
+                                          }
+                                        },
+                                        switchActiveText: "Yes",
+                                        switchInactiveText: "No",
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            /*
                             Card(
                               margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                               shape: RoundedRectangleBorder(
@@ -293,14 +1119,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                   // ignore: deprecated_member_use
                                   color: themecolor.withOpacity(0.65),
                                 ),
-                                title: const Text('Allow Date to Change',
+                                title: const Text('Allow to change Expense Date',
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.bold,
                                     )),
-                                subtitle: Text("Set default date & time picker ON."),
+                                subtitle: Text("If set, the expense date can be changed with the date picker."),
                                 onTap: () {
                                   showCustomDialog(
                                     title: "Allow Change Date",
@@ -362,14 +1188,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                   // ignore: deprecated_member_use
                                   color: themecolor.withOpacity(0.65),
                                 ),
-                                title: const Text('Show Delete Button Site',
+                                title: const Text('Allow Expense Deletion',
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.bold,
                                     )),
-                                subtitle: Text("Show delete button inside Employee expenses."),
+                                subtitle: Text("If set, the expense can be deleted by the Employee."),
                                 onTap: () {
                                   showCustomDialog(
                                     title: "Show Delete Button",
@@ -431,19 +1257,24 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                   // ignore: deprecated_member_use
                                   color: themecolor.withOpacity(0.65),
                                 ),
-                                title: const Text('Add Default Location',
+                                title: const Text('Allow Location Tracking',
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 16,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.bold,
                                     )),
-                                subtitle: Text("Store your current location."),
+                                subtitle: Text("All expenses will be tracked by location while adding."),
                                 onTap: () {
-                                  // loadController.getCurrentLocation();
+                                  if (loadController.adminLat.value == "" && loadController.adminLng.value == "") {
+                                    loadController.requestLocationPermission(isAdmin: true, adminId: widget.adminId);
+                                  } else {
+                                    showUpdateLocationDialog(context);
+                                  }
                                 },
                               ),
                             ),
+                            */
                             SizedBox(
                               height: 50,
                             ),
@@ -452,8 +1283,10 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                       ],
                     ),
                     Obx(
-                      () => loadController.locationLoading.isTrue
-                          ? Center(
+                      () => loadController.adminLocationLoading.isTrue
+                          ? Container(
+                              alignment: Alignment.center,
+                              height: MediaQuery.of(context).size.height * 0.8,
                               child: FittedBox(
                                 fit: BoxFit.fitWidth,
                                 child: Container(
@@ -620,6 +1453,124 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           );
         });
       },
+    );
+  }
+
+  Widget customSwitch({
+    required bool initialSwitchValue,
+    required ValueChanged<bool> onSwitchChanged,
+    String switchActiveText = "Yes",
+    String switchInactiveText = "No",
+  }) {
+    return FlutterSwitch(
+      value: initialSwitchValue,
+      onToggle: (value) {
+        onSwitchChanged(value);
+      },
+      activeText: switchActiveText,
+      inactiveText: switchInactiveText,
+      activeColor: Colors.indigo,
+      inactiveColor: Colors.grey,
+      activeTextColor: Colors.white,
+      inactiveTextColor: Colors.white,
+      valueFontSize: 14,
+      width: 60,
+      height: 28,
+      borderRadius: 50.0,
+      showOnOff: true,
+    );
+  }
+}
+
+//ignore: must_be_immutable
+class AutoApproveSwitch extends StatefulWidget {
+  final bool initialSwitchValue;
+  const AutoApproveSwitch({
+    Key? key,
+    required this.initialSwitchValue,
+  }) : super(key: key);
+
+  @override
+  _AutoApproveSwitchState createState() => _AutoApproveSwitchState();
+}
+
+class _AutoApproveSwitchState extends State<AutoApproveSwitch> {
+  RxBool isLoading = false.obs;
+  bool? switchValue;
+
+  LoadAllFieldsController loadController = Get.put(LoadAllFieldsController());
+
+  @override
+  void initState() {
+    super.initState();
+    switchValue = widget.initialSwitchValue;
+  }
+
+  Future<void> updateAutoApprove(bool value) async {
+    setState(() {
+      isLoading.value = true;
+    });
+
+    try {
+      final adminEmail = SharedPref.get(prefKey: PrefKey.adminEmail);
+      if (adminEmail != null) {
+        QuerySnapshot querySnapshot =
+            await FirebaseFirestore.instance.collection('Admin').where('email', isEqualTo: adminEmail).get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          String adminId = querySnapshot.docs.first.id;
+
+          await FirebaseFirestore.instance
+              .collection('Admin')
+              .doc(adminId)
+              .update({'is_auto_approve': value ? "Yes" : "No"});
+
+          print("Firestore updated: is_auto_approve set to ${value ? "Yes" : "No"}");
+
+          loadController.isAutoApprove.value = value ? "Yes" : "No";
+
+          setState(() {
+            switchValue = value;
+          });
+        } else {
+          print("Admin document not found for email: $adminEmail");
+        }
+      } else {
+        print("Admin email not available.");
+      }
+    } catch (e) {
+      print("Error updating Firestore: $e");
+    }
+
+    setState(() {
+      isLoading.value = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(right: 7.5),
+      child: FlutterSwitch(
+        value: switchValue ?? false,
+        onToggle: (value) {
+          setState(() {
+            switchValue = value;
+          });
+          updateAutoApprove(value);
+        },
+        activeText: "Yes",
+        inactiveText: "No",
+        activeColor: Colors.indigo,
+        inactiveColor: Colors.grey,
+        activeTextColor: Colors.white,
+        inactiveTextColor: Colors.white,
+        valueFontSize: 14,
+        width: 60,
+        height: 28,
+        borderRadius: 50.0,
+        showOnOff: true,
+      ),
     );
   }
 }

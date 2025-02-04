@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/shared_pref.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'package:geocoding/geocoding.dart';
+import 'package:location/location.dart' as loc;
+import 'package:permission_handler/permission_handler.dart' as perm;
 
 class LoadExcelController extends GetxController {
   RxBool loadingDialog = false.obs;
@@ -112,105 +113,168 @@ class LoadAllFieldsController extends GetxController {
     // });
   }
 
-  RxBool locationLoading = false.obs;
+  RxBool adminLocationLoading = false.obs;
+  RxBool employeeLocationLoading = false.obs;
 
-  /*Future<Position?> getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
-      return null;
+  Future<void> requestLocationPermission({required bool isAdmin, String? adminId, String? userId}) async {
+    var status = await perm.Permission.location.status;
+    if (!status.isGranted) {
+      status = await perm.Permission.location.request();
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.deniedForever ||
-          permission == LocationPermission.denied) {
-        return null;
+    if (status.isGranted) {
+      getLocation(isAdmin: isAdmin, adminId: adminId, userId: userId);
+    } else {
+      Fluttertoast.showToast(msg: "Location permission denied");
+      print('Location permission denied');
+    }
+  }
+
+  RxString employeeLat = "".obs;
+  RxString employeeLng = "".obs;
+
+  RxString adminLat = "".obs;
+  RxString adminLng = "".obs;
+
+  RxString fullAdminAddress = "".obs;
+  RxString fullEmployeeAddress = "".obs;
+
+  Future<void> getLocation({required bool isAdmin, String? adminId, String? userId}) async {
+    if (isAdmin) {
+      adminLocationLoading.value = true;
+    } else {
+      employeeLocationLoading.value = true;
+    }
+
+    loc.Location location = loc.Location();
+
+    bool serviceEnabled;
+    loc.PermissionStatus permissionGranted;
+    loc.LocationData locationData;
+
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return;
       }
     }
 
-    return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-  }*/
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == loc.PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != loc.PermissionStatus.granted) {
+        return;
+      }
+    }
 
-  /*Future<String> getPlaceName(double latitude, double longitude) async {
-    List<Placemark> placeMarks =
-    await placemarkFromCoordinates(latitude, longitude);
-    return placeMarks.first.name ?? 'Unknown Place';
-  }*/
+    locationData = await location.getLocation();
 
-  // Future<Position?> getCurrentLocation() async {
-  //   try {
-  //     locationLoading.value = true;
-  //
-  //     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  //     if (!serviceEnabled) {
-  //       await Geolocator.openLocationSettings();
-  //       locationLoading.value = false;
-  //       return null;
-  //     }
-  //
-  //     LocationPermission permission = await Geolocator.checkPermission();
-  //     if (permission == LocationPermission.denied) {
-  //       permission = await Geolocator.requestPermission();
-  //       if (permission == LocationPermission.deniedForever ||
-  //           permission == LocationPermission.denied) {
-  //         locationLoading.value = false;
-  //         return null;
-  //       }
-  //     }
-  //
-  //     Position position = await Geolocator.getCurrentPosition(
-  //       desiredAccuracy: LocationAccuracy.high,
-  //     );
-  //
-  //     locationLoading.value = false;
-  //     return position;
-  //   } catch (e) {
-  //     locationLoading.value = false;
-  //     print("Error fetching location: $e");
-  //     return null;
-  //   }
-  // }
-  //
-  // Future<String> getPlaceName(double latitude, double longitude) async {
-  //   try {
-  //     List<Placemark> placeMarks =
-  //     await placemarkFromCoordinates(latitude, longitude);
-  //     return placeMarks.first.name ?? 'Unknown Place';
-  //   } catch (e) {
-  //     print("Error fetching place name: $e");
-  //     return 'Unknown Place';
-  //   }
-  // }
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(locationData.latitude ?? 0.0, locationData.longitude ?? 0.0);
+    Placemark placemark = placemarks.first;
+
+    // Set location details in RxString
+    String fullAddress =
+        '${placemark.name}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}';
+    print(fullAddress);
+
+    /*if (isAdmin) {
+      adminLat.value = locationData.latitude?.toString() ?? '';
+      adminLng.value = locationData.longitude?.toString() ?? '';
+      adminLocationLoading.value = false;
+      print("Admin Location: $fullAddress");
+    } else {
+      employeeLat.value = locationData.latitude?.toString() ?? '';
+      employeeLng.value = locationData.longitude?.toString() ?? '';
+      employeeLocationLoading.value = false;
+      print("Employee Location: $fullAddress");
+    }*/
+
+    if (isAdmin) {
+      // Admin location logic
+      adminLat.value = locationData.latitude?.toString() ?? '';
+      adminLng.value = locationData.longitude?.toString() ?? '';
+
+      // Fetch Admin document from Firestore
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance.collection('Admin').doc(adminId).get();
+
+      if (adminDoc.exists) {
+        Map<String, dynamic> adminData = adminDoc.data() as Map<String, dynamic>;
+        if (adminData.containsKey('lat') && adminData.containsKey('lng') && adminData.containsKey('place')) {
+          // Update the fields if they exist
+          await adminDoc.reference.update({
+            'lat': adminLat.value,
+            'lng': adminLng.value,
+            'place': fullAddress,
+          });
+        } else {
+          // Create new fields if they don't exist
+          await adminDoc.reference.set({
+            'lat': adminLat.value,
+            'lng': adminLng.value,
+            'place': fullAddress,
+          }, SetOptions(merge: true)); // Use merge to avoid overwriting other fields
+        }
+      }
+
+      adminLocationLoading.value = false;
+      fullAdminAddress.value = fullAddress;
+      print("Admin Location: $fullAddress");
+    } else {
+      // Employee location logic
+      employeeLat.value = locationData.latitude?.toString() ?? '';
+      employeeLng.value = locationData.longitude?.toString() ?? '';
+
+      // Fetch Employee document from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('Users').doc(userId).get();
+
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        if (userData.containsKey('lat') && userData.containsKey('lng') && userData.containsKey('place')) {
+          // Update the fields if they exist
+          await userDoc.reference.update({
+            'lat': employeeLat.value,
+            'lng': employeeLng.value,
+            'place': fullAddress,
+          });
+        } else {
+          // Create new fields if they don't exist
+          await userDoc.reference.set({
+            'lat': employeeLat.value,
+            'lng': employeeLng.value,
+            'place': fullAddress,
+          }, SetOptions(merge: true)); // Use merge to avoid overwriting other fields
+        }
+      }
+
+      employeeLocationLoading.value = false;
+      fullEmployeeAddress.value = fullAddress;
+      print("Employee Location: $fullAddress");
+    }
+  }
+
+  var userCount = 0.obs;
+
+  void fetchUserCount(String adminId) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Users')
+          .where('adminId', isEqualTo: adminId) // Replace with your adminId logic
+          .get();
+
+      userCount.value = querySnapshot.size; // Update observable
+    } catch (e) {
+      print("Error fetching user count: $e");
+    }
+  }
 }
 
 class AdminProfileController extends GetxController {
   RxString finalImageUrl = ''.obs;
   Rx<File?> image = Rx<File?>(null);
 
-  // TextEditingController dialogController = TextEditingController();
-  // RxBool showRow = false.obs;
-
   final ImagePicker _picker = ImagePicker();
-
-  // Future<void> getImage() async {
-  //   try {
-  //     final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-  //
-  //     if (pickedFile != null) {
-  //       image.value = File(pickedFile.path);
-  //       print('Image Selected: ${pickedFile.path}');
-  //     } else {
-  //       print('No Image Selected');
-  //       Fluttertoast.showToast(msg: 'No Image Selected');
-  //     }
-  //   } catch (e) {
-  //     print('Error picking image: $e');
-  //     Fluttertoast.showToast(msg: 'Error picking image $e');
-  //   }
-  // }
 
   Future<void> getImage(ImageSource source) async {
     try {
@@ -228,12 +292,6 @@ class AdminProfileController extends GetxController {
       Fluttertoast.showToast(msg: 'Error picking image: $e');
     }
   }
-
-  // @override
-  // void onInit() {
-  //   image.value = null;
-  //   super.onInit();
-  // }
 }
 
 class EmployeeProfileController extends GetxController {
@@ -242,23 +300,6 @@ class EmployeeProfileController extends GetxController {
 
   final ImagePicker _picker = ImagePicker();
 
-  // Future<void> getImage() async {
-  //   try {
-  //     final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-  //
-  //     if (pickedFile != null) {
-  //       image.value = File(pickedFile.path);
-  //       print('Image Selected: ${pickedFile.path}');
-  //     } else {
-  //       print('No Image Selected');
-  //       Fluttertoast.showToast(msg: 'No Image Selected');
-  //     }
-  //   } catch (e) {
-  //     print('Error picking image: $e');
-  //     Fluttertoast.showToast(msg: 'Error picking image $e');
-  //   }
-  // }
-
   Future<void> getImage(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
@@ -275,10 +316,4 @@ class EmployeeProfileController extends GetxController {
       Fluttertoast.showToast(msg: 'Error picking image: $e');
     }
   }
-
-  // @override
-  // void onInit() {
-  //   image.value = null;
-  //   super.onInit();
-  // }
 }
